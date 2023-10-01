@@ -1,0 +1,11 @@
+{
+    "gopls": {
+        // Add parameter placeholders when completing a function.
+        "usePlaceholders": true,
+        // If true, enable additional analyses with staticcheck.
+        // Warning: This will significantly increase memory usage.
+        "staticcheck": false,
+        "formatting.local": "github.com/drmaples/starter-app",
+        "formatting.gofumpt": true,
+    },
+}
