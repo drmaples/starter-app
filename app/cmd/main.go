@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/drmaples/starter-app/app/controller"
-	"github.com/drmaples/starter-app/app/models"
+	"github.com/drmaples/starter-app/app/repo"
 )
 
 const (
@@ -42,7 +42,7 @@ func main() {
 
 	loadEnv(ctx)
 
-	if err := models.Initialize(ctx); err != nil {
+	if err := repo.Initialize(ctx); err != nil {
 		panic(err)
 	}
 
