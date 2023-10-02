@@ -1,5 +1,5 @@
 PGPASSWORD=postgres
 PGPORT=15432
 PGUSER=postgres
-PGDATABASE=one_advisory
+PGDATABASE=darrell
 PGHOST=host.docker.internal

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"os"
 	"strconv"
 	"sync"
@@ -50,16 +49,8 @@ func DBConn() *sql.DB {
 
 // Initialize sets up the models layer - db connection
 func Initialize(ctx context.Context) error {
-	if !canConnect(ctx, DBConn()) {
-		return errors.New("cannot connect to db")
+	if err := DBConn().PingContext(ctx); err != nil {
+		return errors.Wrap(err, "cannot connect to db")
 	}
 	return nil
-}
-
-func canConnect(ctx context.Context, conn *sql.DB) bool {
-	if err := conn.PingContext(ctx); err != nil {
-		slog.ErrorContext(ctx, "problem connecting to database", slog.Any("orig.error", err))
-		return false
-	}
-	return true
 }

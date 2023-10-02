@@ -7,6 +7,6 @@ CREATE TABLE users (
 );
 
 INSERT INTO users (email, first_name, last_name) VALUES
-    ('darrell@example', 'duh', 'rell'),
+    ('darrell@example.com', 'duh', 'rell'),
     ('foo@bar.com', 'foo', 'bar'),
     ('blip@blap.com', 'blip', 'blap');

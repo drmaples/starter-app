@@ -32,14 +32,14 @@ func (Run) Database() error {
 	return sh.RunV(
 		"docker",
 		"run",
-		"--name", "one_advisory_db",
+		"--name", "darrell_db",
 		"--rm",
 		"--interactive",
 		"--tty",
 		// "--detach",
 		"--env", "POSTGRES_USER=postgres",
 		"--env", "POSTGRES_PASSWORD=postgres",
-		"--env", "POSTGRES_DB=one_advisory",
+		"--env", "POSTGRES_DB=darrell",
 		"--env", "PGDATA=/var/lib/postgresql/data",
 		"--publish", "15432:5432",
 		"--volume", fmt.Sprintf("%s/.pg/data:/var/lib/postgresql/data", pwd),
@@ -47,3 +47,13 @@ func (Run) Database() error {
 		"postgres:15.2",
 	)
 }
+
+/*
+docker run -it --rm \
+	-e "PGHOST=host.docker.internal" \
+	-e "PGPORT=15432" \
+	-e "PGUSER=postgres" \
+	-e "PGPASSWORD=postgres" \
+	-e "PGDATABASE=darrell" \
+	postgres:15.2 psql
+*/
