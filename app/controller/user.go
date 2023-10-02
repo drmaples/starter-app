@@ -3,6 +3,7 @@ package controller
 import (
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -11,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	slogecho "github.com/samber/slog-echo"
 
+	"github.com/drmaples/starter-app/app/objectstore"
 	"github.com/drmaples/starter-app/app/repo"
 )
 
@@ -32,6 +34,8 @@ func Initialize() *echo.Echo {
 	e.GET("/user", handleListUsers)
 	e.GET("/user/:id", handleGetUser)
 	e.POST("/user", handleCreateUser)
+
+	e.GET("/files", handleListFiles)
 
 	return e
 }
@@ -139,4 +143,25 @@ func handleCreateUser(c echo.Context) error {
 	)
 
 	return c.JSON(http.StatusOK, newUser)
+}
+
+func handleListFiles(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	// FIXME: do not construct this every time
+	bucket, ok := os.LookupEnv("OBJECT_STORE_BUCKET")
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, map[string]any{"message": "object store bucket not defined"})
+	}
+
+	objStore, err := objectstore.New(ctx, bucket)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]any{"message": err.Error()})
+	}
+	obj, err := objStore.GetObject(ctx, "darrell.txt")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]any{"message": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]any{"key": obj.Key, "data": string(obj.Data)})
 }

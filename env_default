@@ -3,3 +3,5 @@ PGPORT=15432
 PGUSER=postgres
 PGDATABASE=darrell
 PGHOST=host.docker.internal
+OBJECT_STORE_PROVIDER=fs  # fs, s3, gcs
+OBJECT_STORE_BUCKET=.local_fs
