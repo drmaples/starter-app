@@ -50,6 +50,12 @@ func (Run) Database() error {
 
 /*
 docker run -it --rm \
+	--env-file=.env \
+	-e "PGHOST=host.docker.internal" \
+	postgres:15.2 psql
+
+
+docker run -it --rm \
 	-e "PGHOST=host.docker.internal" \
 	-e "PGPORT=15432" \
 	-e "PGUSER=postgres" \

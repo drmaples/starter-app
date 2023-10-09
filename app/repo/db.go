@@ -4,10 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
-	"strconv"
 	"sync"
 
+	"github.com/caarlos0/env/v9"
 	_ "github.com/jackc/pgx/v5/stdlib" // postgres drivers
 	"github.com/pkg/errors"
 )
@@ -17,19 +16,24 @@ var (
 	dbInst     *sql.DB
 )
 
+type config struct {
+	Host     string `env:"PGHOST"`
+	Port     int    `env:"PGPORT"`
+	User     string `env:"PGUSER"`
+	Password string `env:"PGPASSWORD"`
+	Database string `env:"PGDATABASE"`
+}
+
 // DBConn is a singleton db connection
 func DBConn() *sql.DB {
 	dbConnOnce.Do(func() {
-		port, err := strconv.Atoi(os.Getenv("PGPORT"))
-		if err != nil {
+		var cfg config
+		if err := env.Parse(&cfg); err != nil {
 			panic(err)
 		}
+
 		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-			os.Getenv("PGHOST"),
-			port,
-			os.Getenv("PGUSER"),
-			os.Getenv("PGPASSWORD"),
-			os.Getenv("PGDATABASE"),
+			cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database,
 		)
 		db, err := sql.Open("pgx", dsn)
 		if err != nil {

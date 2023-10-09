@@ -64,6 +64,11 @@ linters-settings:
     checks:
       - "all"
       - "-SA1019" # Using a deprecated function, variable, constant or field
+  tagliatelle:
+    case:
+      use-field-name: true
+      rules:
+        json: snake
 
 linters:
   disable-all: false

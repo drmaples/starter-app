@@ -124,7 +124,7 @@ func (s *fsStore) DeleteObject(ctx context.Context, key string) error {
 	return nil
 }
 
-func (s *fsStore) getFullPath(ctx context.Context, key string) (string, error) {
+func (s *fsStore) getFullPath(_ context.Context, key string) (string, error) {
 	if key == "" {
 		return "", errors.New("object key is empty")
 	}
@@ -147,7 +147,7 @@ func removeFile(ctx context.Context, path string) error {
 	return nil
 }
 
-func checkFileExists(ctx context.Context, path string) (bool, error) {
+func checkFileExists(_ context.Context, path string) (bool, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -170,7 +170,7 @@ func ensureDir(ctx context.Context, baseDir, fileName string) error {
 	return os.MkdirAll(filepath.Dir(fileName), 0o755)
 }
 
-func checkBaseDirExists(ctx context.Context, baseDir string) error {
+func checkBaseDirExists(_ context.Context, baseDir string) error {
 	fileInfo, err := os.Stat(baseDir)
 	if err != nil {
 		if os.IsNotExist(err) {
