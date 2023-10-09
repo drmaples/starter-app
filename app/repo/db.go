@@ -17,11 +17,11 @@ var (
 )
 
 type config struct {
-	Host     string `env:"PGHOST"`
-	Port     int    `env:"PGPORT"`
-	User     string `env:"PGUSER"`
-	Password string `env:"PGPASSWORD"`
-	Database string `env:"PGDATABASE"`
+	Host     string `env:"PGHOST,required"`
+	Port     int    `env:"PGPORT,required"`
+	User     string `env:"PGUSER,required"`
+	Password string `env:"PGPASSWORD,required"`
+	Database string `env:"PGDATABASE,required"`
 }
 
 // DBConn is a singleton db connection
