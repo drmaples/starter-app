@@ -1,6 +1,6 @@
 module github.com/drmaples/starter-app
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/jackc/pgx/v5 v5.4.3

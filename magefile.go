@@ -23,7 +23,7 @@ func (Run) Server() error {
 	return sh.RunV("go", "run", "app/cmd/main.go")
 }
 
-func (Run) Database() error {
+func (Run) Db() error {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err

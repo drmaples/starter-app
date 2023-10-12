@@ -13,10 +13,10 @@ var ErrNoRowsFound = errors.New("no rows found")
 
 // User represents a user in db
 type User struct {
-	ID        int    `json:"id"`
-	Email     string `json:"email" validate:"required,email"`
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name" validate:"required"`
+	ID        int    `db:"id"`
+	Email     string `db:"email"`
+	FirstName string `db:"first_name"`
+	LastName  string `db:"last_name"`
 }
 
 // IUserRepo is repo interface for accessing users in db
