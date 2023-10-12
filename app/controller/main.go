@@ -33,8 +33,6 @@ func Initialize() *echo.Echo {
 	e.GET("/user/:id", handleGetUser)
 	e.POST("/user", handleCreateUser)
 
-	e.GET("/file", handleListFiles)
-
 	return e
 }
 
