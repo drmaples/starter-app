@@ -17,12 +17,8 @@ type userRoute struct {
 
 func handleListUsers(c echo.Context) error {
 	ctx := c.Request().Context()
-	tx, err := repo.DBConn().BeginTx(ctx, nil)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
-	}
 
-	users, err := repo.NewUserRepo().ListUsers(ctx, tx, schema)
+	users, err := repo.NewUserRepo().ListUsers(ctx, repo.DBConn(), schema)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
@@ -47,12 +43,7 @@ func handleGetUser(c echo.Context) error {
 		),
 	)
 
-	tx, err := repo.DBConn().BeginTx(ctx, nil)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
-	}
-
-	u, err := repo.NewUserRepo().GetUserByID(ctx, tx, schema, ur.ID)
+	u, err := repo.NewUserRepo().GetUserByID(ctx, repo.DBConn(), schema, ur.ID)
 	if err != nil {
 		if errors.Is(err, repo.ErrNoRowsFound) {
 			return c.JSON(http.StatusNotFound, dto.NewErrorResp("no user for given id"))
@@ -65,7 +56,7 @@ func handleGetUser(c echo.Context) error {
 func handleCreateUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var u dto.User
+	var u dto.CreateUser
 	if err := c.Bind(&u); err != nil {
 		return c.JSON(http.StatusBadRequest, dto.NewErrorResp(err.Error()))
 	}

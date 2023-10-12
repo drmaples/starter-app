@@ -21,9 +21,9 @@ type User struct {
 
 // IUserRepo is repo interface for accessing users in db
 type IUserRepo interface {
-	GetUserByID(ctx context.Context, tx *sql.Tx, schema string, userID int) (*User, error)
-	ListUsers(ctx context.Context, tx *sql.Tx, schema string) ([]User, error)
-	CreateUser(ctx context.Context, tx *sql.Tx, schema string, u User) (*User, error)
+	GetUserByID(ctx context.Context, tx Querier, schema string, userID int) (*User, error)
+	ListUsers(ctx context.Context, tx Querier, schema string) ([]User, error)
+	CreateUser(ctx context.Context, tx Querier, schema string, u User) (*User, error)
 }
 
 // UserRepo is implementation of IUserRepo
@@ -35,7 +35,7 @@ func NewUserRepo() IUserRepo {
 }
 
 // GetUserByID fetches a user from the db by ID
-func (r *UserRepo) GetUserByID(ctx context.Context, tx *sql.Tx, schema string, userID int) (*User, error) {
+func (r *UserRepo) GetUserByID(ctx context.Context, tx Querier, schema string, userID int) (*User, error) {
 	sqlStatement := fmt.Sprintf(
 		`SELECT id, email, first_name, last_name
 		FROM %[1]s.users
@@ -54,7 +54,7 @@ func (r *UserRepo) GetUserByID(ctx context.Context, tx *sql.Tx, schema string, u
 }
 
 // ListUsers gets all users from db
-func (r *UserRepo) ListUsers(ctx context.Context, tx *sql.Tx, schema string) ([]User, error) {
+func (r *UserRepo) ListUsers(ctx context.Context, tx Querier, schema string) ([]User, error) {
 	sqlStatement := fmt.Sprintf(
 		`SELECT id, email, first_name, last_name
 		FROM %[1]s.users`,
@@ -82,7 +82,7 @@ func (r *UserRepo) ListUsers(ctx context.Context, tx *sql.Tx, schema string) ([]
 }
 
 // CreateUser creates a new user in db
-func (r *UserRepo) CreateUser(ctx context.Context, tx *sql.Tx, schema string, u User) (*User, error) {
+func (r *UserRepo) CreateUser(ctx context.Context, tx Querier, schema string, u User) (*User, error) {
 	sqlStatement := fmt.Sprintf(
 		`INSERT INTO %[1]s.users
 		(email, first_name, last_name)

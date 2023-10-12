@@ -15,15 +15,25 @@ type User struct {
 // Model converts a dto object to model object
 func (u *User) Model() repo.User {
 	return repo.User{
+		ID:        u.ID,
 		Email:     u.Email,
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 	}
 }
 
-// CreateUserRequest is for dto for creating new user
-type CreateUserRequest struct {
+// CreateUser is for dto for creating new user
+type CreateUser struct {
 	Email     string `json:"email" validate:"required,email"`
 	FirstName string `json:"first_name" validate:"required"`
 	LastName  string `json:"last_name" validate:"required"`
+}
+
+// Model converts a dto object to model object
+func (u *CreateUser) Model() repo.User {
+	return repo.User{
+		Email:     u.Email,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+	}
 }

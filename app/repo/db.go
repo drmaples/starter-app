@@ -16,6 +16,13 @@ var (
 	dbInst     *sql.DB
 )
 
+// Querier represents a query-able database/sql object: sql.Tx, sql.DB, sql.Stmt
+type Querier interface {
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+}
+
 type config struct {
 	Host     string `env:"PGHOST,required"`
 	Port     int    `env:"PGPORT,required"`
