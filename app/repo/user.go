@@ -2,9 +2,9 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"github.com/pkg/errors"
 )
 
@@ -41,11 +41,10 @@ func (r *UserRepo) GetUserByID(ctx context.Context, tx Querier, schema string, u
 		FROM %[1]s.users
 		WHERE id = $1`,
 		schema)
-	row := tx.QueryRowContext(ctx, sqlStatement, userID)
 
 	var u User
-	if err := row.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+	if err := sqlscan.Get(context.Background(), tx, &u, sqlStatement, userID); err != nil {
+		if sqlscan.NotFound(err) {
 			return nil, ErrNoRowsFound
 		}
 		return nil, errors.Wrap(err, "problem fetching user by id")
@@ -59,25 +58,11 @@ func (r *UserRepo) ListUsers(ctx context.Context, tx Querier, schema string) ([]
 		`SELECT id, email, first_name, last_name
 		FROM %[1]s.users`,
 		schema)
-	rows, err := tx.QueryContext(ctx, sqlStatement)
-	if err != nil {
-		return nil, errors.Wrap(err, "problem getting all users")
-	}
-	defer rows.Close()
 
 	var result []User
-	for rows.Next() {
-		var u User
-		if err := rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName); err != nil {
-			return nil, errors.Wrap(err, "problem scanning user row")
-		}
-		result = append(result, u)
+	if err := sqlscan.Select(ctx, tx, &result, sqlStatement); err != nil {
+		return nil, errors.Wrap(err, "problem getting all users")
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, errors.Wrap(err, "error iterating rows")
-	}
-
 	return result, nil
 }
 

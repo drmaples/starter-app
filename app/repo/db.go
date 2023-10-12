@@ -14,9 +14,13 @@ import (
 var (
 	dbConnOnce sync.Once
 	dbInst     *sql.DB
+
+	_ Querier = &sql.DB{}   // assert adheres to interface
+	_ Querier = &sql.Conn{} // assert adheres to interface
+	_ Querier = &sql.Tx{}   // assert adheres to interface
 )
 
-// Querier represents a query-able database/sql object: sql.Conn, sql.DB, sql.Tx, sql.Stmt
+// Querier represents a query-able database/sql object: sql.DB, sql.Conn, sql.Tx
 type Querier interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
