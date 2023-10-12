@@ -16,7 +16,7 @@ var (
 	dbInst     *sql.DB
 )
 
-// Querier represents a query-able database/sql object: sql.Tx, sql.DB, sql.Stmt
+// Querier represents a query-able database/sql object: sql.Conn, sql.DB, sql.Tx, sql.Stmt
 type Querier interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
