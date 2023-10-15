@@ -43,7 +43,6 @@ func (Run) Db() error {
 		"--env", "PGDATA=/var/lib/postgresql/data",
 		"--publish", "15432:5432",
 		"--volume", fmt.Sprintf("%s/.pg/data:/var/lib/postgresql/data", pwd),
-		"--volume", fmt.Sprintf("%s/db/local/init.sql:/docker-entrypoint-initdb.d/init.sql", pwd),
 		"postgres:15.2",
 	)
 }
