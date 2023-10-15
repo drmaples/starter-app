@@ -18,7 +18,7 @@ type userRoute struct {
 func handleListUsers(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	users, err := repo.NewUserRepo().ListUsers(ctx, repo.DBConn(), schema)
+	users, err := repo.NewUserRepo().ListUsers(ctx, repo.DBConn(), repo.DefaultSchema)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
@@ -43,7 +43,7 @@ func handleGetUser(c echo.Context) error {
 		),
 	)
 
-	u, err := repo.NewUserRepo().GetUserByID(ctx, repo.DBConn(), schema, ur.ID)
+	u, err := repo.NewUserRepo().GetUserByID(ctx, repo.DBConn(), repo.DefaultSchema, ur.ID)
 	if err != nil {
 		if errors.Is(err, repo.ErrNoRowsFound) {
 			return c.JSON(http.StatusNotFound, dto.NewErrorResp("no user for given id"))
@@ -69,7 +69,7 @@ func handleCreateUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
 
-	newUser, err := repo.NewUserRepo().CreateUser(ctx, tx, schema, u.Model())
+	newUser, err := repo.NewUserRepo().CreateUser(ctx, tx, repo.DefaultSchema, u.Model())
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			err := errors.Wrap(err, "problem rolling back transaction")

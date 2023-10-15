@@ -11,6 +11,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DefaultSchema is default postgres schema where tables live
+const DefaultSchema = "public"
+
 var (
 	dbConnOnce sync.Once
 	dbInst     *sql.DB

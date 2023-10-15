@@ -11,8 +11,8 @@ import (
 	slogecho "github.com/samber/slog-echo"
 )
 
-// FIXME: move this
-const schema = "public"
+// ServerAddress is address where server runs
+const ServerAddress = ":8000"
 
 // Initialize sets up the controller layer
 func Initialize() *echo.Echo {

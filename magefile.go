@@ -20,7 +20,7 @@ func init() {
 }
 
 func (Run) Server() error {
-	return sh.RunV("go", "run", "app/cmd/main.go")
+	return sh.RunV("go", "run", "app/cmd/server/main.go")
 }
 
 func (Run) Db() error {

@@ -43,7 +43,7 @@ func (r *UserRepo) GetUserByID(ctx context.Context, tx Querier, schema string, u
 		schema)
 
 	var u User
-	if err := sqlscan.Get(context.Background(), tx, &u, sqlStatement, userID); err != nil {
+	if err := sqlscan.Get(ctx, tx, &u, sqlStatement, userID); err != nil {
 		if sqlscan.NotFound(err) {
 			return nil, ErrNoRowsFound
 		}
