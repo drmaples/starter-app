@@ -15,6 +15,6 @@ a starter app with all the things you need for a new microservice:
 
 ## running
 
-1. ensure sure database is running, see `mage run:db`
+1. ensure sure database is running, see `docker-compose up --force-recreate`
 2. apply any db migrations, see `go run app/cmd/migrate/main.go -h`
 3. run web server, see `mage run:server`

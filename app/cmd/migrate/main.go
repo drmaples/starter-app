@@ -14,7 +14,7 @@ import (
 
 	"github.com/drmaples/starter-app/app/platform"
 	"github.com/drmaples/starter-app/app/repo"
-	"github.com/drmaples/starter-app/db/migration"
+	"github.com/drmaples/starter-app/db"
 )
 
 func rootCmd() *cli.App {
@@ -35,7 +35,7 @@ func getMigrator() (*migrate.Migrate, error) {
 		return nil, errors.Wrap(err, "problem getting driver")
 	}
 
-	fs, err := iofs.New(migration.MigrationFS, migration.FileLocation)
+	fs, err := iofs.New(db.MigrationFS, db.FileLocation)
 	if err != nil {
 		return nil, errors.Wrap(err, "problem setting up migration file system")
 	}
@@ -52,12 +52,12 @@ func currentCmd() *cli.Command {
 		Name:  "current",
 		Usage: "list current and latest db migration version",
 		Action: func(cCtx *cli.Context) error {
-			paths, err := migration.MigrationFS.ReadDir(migration.FileLocation)
+			paths, err := db.MigrationFS.ReadDir(db.FileLocation)
 			if err != nil {
 				return errors.Wrap(err, "problem listing paths")
 			}
 			latest := paths[len(paths)-1]
-			path := migration.PathRE.FindSubmatch([]byte(latest.Name()))
+			path := db.PathRE.FindSubmatch([]byte(latest.Name()))
 			if len(path) < 1 {
 				return errors.New("invalid migration path")
 			}
