@@ -17,6 +17,9 @@ import (
 	"github.com/drmaples/starter-app/db"
 )
 
+// FIXME: fetching from env vars seems useful
+// https://cli.urfave.org/v2/examples/flags/#values-from-the-environment
+
 func rootCmd() *cli.App {
 	root := &cli.App{
 		Name:  "migrate",

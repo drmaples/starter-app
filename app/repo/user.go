@@ -77,6 +77,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, tx Querier, schema string, u 
 		schema)
 	row := tx.QueryRowContext(ctx, sqlStatement, u.Email, u.FirstName, u.LastName)
 
+	// no scany here since it takes `sql.Rows`, not a `sql.Row`, see https://github.com/georgysavva/scany/issues/116
 	if err := row.Scan(&u.ID); err != nil {
 		return nil, errors.Wrap(err, "problem inserting user")
 	}
