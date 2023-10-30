@@ -88,7 +88,7 @@ func findNextPage(h *http.Header) (string, bool) {
 	return "", false
 }
 
-func getRepos(ctx context.Context, token string) ([]githubRepoResponse, error) {
+func getRepos(ctx context.Context) ([]githubRepoResponse, error) {
 	var allData []githubRepoResponse
 	url := fmt.Sprintf("/orgs/%s/repos?per_page=100&sort=full_name", org)
 	for {
@@ -111,7 +111,7 @@ func getRepos(ctx context.Context, token string) ([]githubRepoResponse, error) {
 	return allData, nil
 }
 
-func getRepoTeamData(ctx context.Context, string, repo string) ([]githubRepoTeamResponse, error) {
+func getRepoTeamData(ctx context.Context, repo string) ([]githubRepoTeamResponse, error) {
 	url := fmt.Sprintf("/repos/%s/%s/teams", org, repo)
 	var rawData []githubRepoTeamResponse
 	_, err := client.R().SetContext(ctx).
@@ -123,7 +123,7 @@ func getRepoTeamData(ctx context.Context, string, repo string) ([]githubRepoTeam
 	return rawData, nil
 }
 
-func getRepoBranchProtectionData(ctx context.Context, token string, repo string, defaultBranch string) (githubRepoBranchProtectionResponse, error) {
+func getRepoBranchProtectionData(ctx context.Context, repo string, defaultBranch string) (githubRepoBranchProtectionResponse, error) {
 	url := fmt.Sprintf("/repos/%s/%s/branches/%s/protection", org, repo, defaultBranch)
 	var rawData githubRepoBranchProtectionResponse
 	_, err := client.R().SetContext(ctx).
@@ -136,7 +136,7 @@ func getRepoBranchProtectionData(ctx context.Context, token string, repo string,
 }
 
 // getExtraAdmins returns repo admins that are not org admins
-func getExtraAdmins(ctx context.Context, token string, repo string) ([]string, error) {
+func getExtraAdmins(ctx context.Context, repo string) ([]string, error) {
 	url := fmt.Sprintf("/repos/%s/%s/collaborators", org, repo)
 	var rawData []githubRepoCollabResponse
 
@@ -170,7 +170,7 @@ func doWork(ctx context.Context) error {
 	t.SetStyle(table.StyleLight)
 	t.AppendHeader(table.Row{"repo", "default branch", "teams", "extra admins", "req checks", "num approvals", "dismiss stale", "code owner review", "restricted", "restricted pushers"})
 
-	repos, err := getRepos(ctx, token)
+	repos, err := getRepos(ctx)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func doWork(ctx context.Context) error {
 	fmt.Print("fetching repo info")
 	for _, repo := range repos {
 		fmt.Print(".")
-		teamData, err := getRepoTeamData(ctx, token, repo.Name)
+		teamData, err := getRepoTeamData(ctx, repo.Name)
 		if err != nil {
 			return err
 		}
@@ -188,7 +188,7 @@ func doWork(ctx context.Context) error {
 			teams = append(teams, fmt.Sprintf("[%s] %s", td.Permission, td.Name))
 		}
 
-		protectionData, err := getRepoBranchProtectionData(ctx, token, repo.Name, repo.DefaultBranch)
+		protectionData, err := getRepoBranchProtectionData(ctx, repo.Name, repo.DefaultBranch)
 		if err != nil {
 			return err
 		}
@@ -197,7 +197,7 @@ func doWork(ctx context.Context) error {
 			restrictedPushers = append(restrictedPushers, t.Name)
 		}
 
-		extraAdmins, err := getExtraAdmins(ctx, token, repo.Name)
+		extraAdmins, err := getExtraAdmins(ctx, repo.Name)
 		if err != nil {
 			return err
 		}
