@@ -18,6 +18,12 @@ type userRoute struct {
 func handleListUsers(c echo.Context) error {
 	ctx := c.Request().Context()
 
+	// loggedInUser, err := extractUser(c)
+	// if err != nil {
+	// 	return c.JSON(http.StatusUnauthorized, dto.NewErrorResp(err.Error()))
+	// }
+	// fmt.Println(">>>>>>>> logged in user:", loggedInUser)
+
 	users, err := repo.NewUserRepo().ListUsers(ctx, repo.DBConn(), repo.DefaultSchema)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))

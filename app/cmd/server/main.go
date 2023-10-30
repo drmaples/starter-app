@@ -23,7 +23,7 @@ func main() {
 
 	e := controller.Initialize()
 	slog.InfoContext(ctx, "starting server",
-		slog.String("address", controller.ServerAddress),
+		slog.String("address", controller.GetServerAddress()),
 	)
-	e.Logger.Fatal(e.Start(controller.ServerAddress))
+	e.Logger.Fatal(e.Start(controller.GetServerBindAddress()))
 }
