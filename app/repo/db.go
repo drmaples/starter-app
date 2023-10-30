@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/caarlos0/env/v9"
 	_ "github.com/jackc/pgx/v5/stdlib" // postgres drivers
 	"github.com/pkg/errors"
+
+	"github.com/drmaples/starter-app/app/platform"
 )
 
 // DefaultSchema is default postgres schema where tables live
@@ -30,24 +31,12 @@ type Querier interface {
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
-type config struct {
-	Host     string `env:"PGHOST,required"`
-	Port     int    `env:"PGPORT,required"`
-	User     string `env:"PGUSER,required"`
-	Password string `env:"PGPASSWORD,required"`
-	Database string `env:"PGDATABASE,required"`
-}
-
 // DBConn is a singleton db connection
 func DBConn() *sql.DB {
 	dbConnOnce.Do(func() {
-		var cfg config
-		if err := env.Parse(&cfg); err != nil {
-			panic(err)
-		}
-
+		cfg := platform.DBConfig()
 		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-			cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database,
+			cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
 		)
 		db, err := sql.Open("pgx", dsn)
 		if err != nil {

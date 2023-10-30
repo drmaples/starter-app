@@ -7,44 +7,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/caarlos0/env/v9"
 	"github.com/go-playground/validator/v10"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	slogecho "github.com/samber/slog-echo"
+
+	"github.com/drmaples/starter-app/app/platform"
 )
-
-var envCfg config
-
-// FIXME: find a better location for this
-type config struct {
-	GoogleClientID     string `env:"GOOGLE_CLIENT_ID,required"`
-	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET,required"`
-	Environment        string `env:"ENVIRONMENT" envDefault:"dev"`
-	ServerURL          string `env:"SERVER_URL" envDefault:"http://localhost"`
-	ServerPort         int    `env:"SERVER_PORT" envDefault:"8000"`
-	JWTSignKey         string `env:"JWT_SIGN_KEY" envDefault:"my-secret"` // do not want default
-}
 
 // GetServerAddress is address where server runs
 func GetServerAddress() string {
-	return fmt.Sprintf("%s:%d", envCfg.ServerURL, envCfg.ServerPort)
+	return fmt.Sprintf("%s:%d", platform.Config().ServerURL, platform.Config().ServerPort)
 }
 
 // GetServerBindAddress is bind address for echo server
 func GetServerBindAddress() string {
-	return fmt.Sprintf(":%d", envCfg.ServerPort)
+	return fmt.Sprintf(":%d", platform.Config().ServerPort)
 }
 
 // Initialize sets up the controller layer
 func Initialize() *echo.Echo {
-	if err := env.Parse(&envCfg); err != nil {
-		panic(err)
-	}
-
 	e := echo.New()
-	if envCfg.Environment != "dev" {
+	if platform.Config().Environment != "dev" {
 		e.HideBanner = true
 		e.HidePort = true
 	}
@@ -68,7 +53,7 @@ func Initialize() *echo.Echo {
 	{
 		restricted.Use(
 			echojwt.WithConfig(echojwt.Config{
-				SigningKey: []byte(envCfg.JWTSignKey),
+				SigningKey: []byte(platform.Config().JWTSignKey),
 			}),
 		)
 		restricted.GET("/user", handleListUsers)
@@ -77,7 +62,7 @@ func Initialize() *echo.Echo {
 	}
 
 	// list routes in use like gin. keep at bottom
-	if envCfg.Environment == "dev" {
+	if platform.Config().Environment == "dev" {
 		for _, r := range e.Routes() {
 			fmt.Printf("[%-5s] %-35s --> %s\n", strings.ToUpper(r.Method), r.Path, r.Name)
 		}

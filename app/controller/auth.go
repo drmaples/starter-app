@@ -12,6 +12,7 @@ import (
 	"golang.org/x/oauth2/google"
 
 	"github.com/drmaples/starter-app/app/dto"
+	"github.com/drmaples/starter-app/app/platform"
 )
 
 const (
@@ -28,8 +29,8 @@ const loginHTML = `<!DOCTYPE html>
 
 func getOauthConfig() *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     envCfg.GoogleClientID,
-		ClientSecret: envCfg.GoogleClientSecret,
+		ClientID:     platform.Config().GoogleClientID,
+		ClientSecret: platform.Config().GoogleClientSecret,
 		RedirectURL:  GetServerAddress() + oauthCallbackURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.profile",
@@ -88,7 +89,7 @@ func handleOauthCallback(c echo.Context) error {
 		},
 	)
 
-	signedToken, err := token.SignedString([]byte(envCfg.JWTSignKey))
+	signedToken, err := token.SignedString([]byte(platform.Config().JWTSignKey))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}

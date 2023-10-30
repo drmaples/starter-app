@@ -15,7 +15,7 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	platform.LoadEnv(ctx)
+	platform.Config() // ensure env vars exist
 
 	if err := repo.Initialize(ctx); err != nil {
 		panic(err)

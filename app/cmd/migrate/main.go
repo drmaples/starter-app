@@ -137,7 +137,7 @@ func runCmd() *cli.Command {
 
 func main() {
 	ctx := context.Background()
-	platform.LoadEnv(ctx)
+	platform.DBConfig() // ensure env vars exist
 	if err := rootCmd().RunContext(ctx, os.Args); err != nil {
 		panic(err)
 	}
