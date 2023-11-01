@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/magefile/mage/mg"
@@ -11,6 +12,7 @@ import (
 
 type (
 	Run mg.Namespace
+	Gen mg.Namespace
 )
 
 func init() {
@@ -24,6 +26,20 @@ func (Run) Server() error {
 
 func (Run) Db() error {
 	return sh.RunV("docker-compose", "up", "--force-recreate")
+}
+
+func (Gen) Swagger() error {
+	// swag is not in $PATH by default. https://github.com/swaggo/swag
+	path, err := sh.Output("go", "env", "GOPATH")
+	if err != nil {
+		return err
+	}
+	swag_bin := fmt.Sprintf("%s/bin/swag", path)
+	if err := sh.RunV(swag_bin, "--version"); err != nil {
+		return err
+	}
+
+	return sh.RunV(swag_bin, "init", "--generalInfo", "app/controller/main.go")
 }
 
 /*

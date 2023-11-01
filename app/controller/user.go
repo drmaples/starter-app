@@ -15,6 +15,16 @@ type userRoute struct {
 	ID int `param:"id"`
 }
 
+// @Summary		list all users
+// @Description	list all users
+// @Tags		users
+// @Accept		json
+// @Produce		json
+// @Success		200	{object}	[]repo.User
+// @Failure		400	{object}	dto.ErrorResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router		/user [get]
 func handleListUsers(c echo.Context) error {
 	ctx := c.Request().Context()
 
