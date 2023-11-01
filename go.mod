@@ -19,6 +19,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/samber/slog-echo v1.3.0
 	github.com/swaggo/echo-swagger v1.4.1
+	github.com/swaggo/swag v1.16.2
 	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/oauth2 v0.1.0
 )
@@ -66,7 +67,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
-	github.com/swaggo/swag v1.16.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
