@@ -2,10 +2,12 @@ package controller
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -40,12 +42,18 @@ func getOauthConfig() *oauth2.Config {
 	}
 }
 
+type jwtCustomClaims struct {
+	Name   string `json:"name"`
+	Domain string `json:"domain"`
+	jwt.RegisteredClaims
+}
+
 func extractUser(c echo.Context) (string, error) {
 	token, ok := c.Get("user").(*jwt.Token) // by default token is stored under `user` key
 	if !ok {
 		return "", errors.New("JWT token missing or invalid")
 	}
-	claims, ok := token.Claims.(jwt.MapClaims) // by default claims is of type `jwt.MapClaims`
+	claims, ok := token.Claims.(*jwtCustomClaims)
 	if !ok {
 		return "", errors.New("failed to cast claims as jwt.MapClaims")
 	}
@@ -80,12 +88,18 @@ func handleOauthCallback(c echo.Context) error {
 	if _, _, err := jwt.NewParser().ParseUnverified(rawToken, googleClaims); err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
-
+	now := time.Now()
+	email := googleClaims["email"].(string)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwt.RegisteredClaims{
-			Subject:   googleClaims["email"].(string),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		jwtCustomClaims{
+			Name:   googleClaims["name"].(string),
+			Domain: googleClaims["hd"].(string), // hosted domain
+			RegisteredClaims: jwt.RegisteredClaims{
+				ID:        uuid.New().String(),
+				Subject:   email,
+				ExpiresAt: jwt.NewNumericDate(now.Add(15 * time.Minute)),
+				IssuedAt:  jwt.NewNumericDate(now),
+			},
 		},
 	)
 
@@ -93,6 +107,8 @@ func handleOauthCallback(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
+
+	slog.InfoContext(ctx, "successful login", slog.String("email", email))
 
 	return c.JSON(http.StatusOK, echo.Map{"token:": signedToken})
 }

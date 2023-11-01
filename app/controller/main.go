@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -73,6 +74,9 @@ func Initialize() *echo.Echo {
 		restricted.Use(
 			echojwt.WithConfig(echojwt.Config{
 				SigningKey: []byte(platform.Config().JWTSignKey),
+				NewClaimsFunc: func(c echo.Context) jwt.Claims {
+					return new(jwtCustomClaims)
+				},
 			}),
 		)
 		restricted.GET("/user", handleListUsers)
