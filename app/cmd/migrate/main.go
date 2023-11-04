@@ -7,8 +7,6 @@ import (
 	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 
@@ -43,21 +41,7 @@ func getMigrator(ctx context.Context) (*migrate.Migrate, error) {
 		return nil, errors.Wrap(err, "problem getting db connection")
 	}
 
-	driver, err := postgres.WithInstance(dbConn, &postgres.Config{})
-	if err != nil {
-		return nil, errors.Wrap(err, "problem getting driver")
-	}
-
-	fs, err := iofs.New(db.MigrationFS, db.FileLocation)
-	if err != nil {
-		return nil, errors.Wrap(err, "problem setting up migration file system")
-	}
-
-	m, err := migrate.NewWithInstance("iofs", fs, "postgres", driver)
-	if err != nil {
-		return nil, errors.Wrap(err, "problem creating migrate object")
-	}
-	return m, nil
+	return repo.NewMigrator(dbConn)
 }
 
 func currentCmd() *cli.Command {

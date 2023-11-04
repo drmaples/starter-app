@@ -12,8 +12,16 @@ import (
 	"github.com/drmaples/starter-app/app/platform"
 )
 
-// DefaultSchema is default postgres schema where tables live
-const DefaultSchema = "public"
+const (
+	// DefaultSchema is default postgres schema where tables live
+	DefaultSchema = "public"
+
+	// Driver is the database driver to use
+	Driver = "pgx"
+
+	// DSNTemplate is template used to construct db dsn
+	DSNTemplate = "host=%[1]s port=%[2]d user=%[3]s password=%[4]s dbname=%[5]s sslmode=disable"
+)
 
 var (
 	dbConnOnce sync.Once
@@ -34,10 +42,8 @@ type Querier interface {
 // dbConn is a singleton db connection since sql.Open should be called once
 func dbConn(cfg platform.DBConfig) *sql.DB {
 	dbConnOnce.Do(func() {
-		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-			cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name,
-		)
-		db, err := sql.Open("pgx", dsn)
+		dsn := fmt.Sprintf(DSNTemplate, cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name)
+		db, err := sql.Open(Driver, dsn)
 		if err != nil {
 			panic(err)
 		}
