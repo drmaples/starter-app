@@ -21,9 +21,5 @@ func main() {
 		panic(err)
 	}
 
-	e := controller.Initialize()
-	slog.InfoContext(ctx, "starting server",
-		slog.String("address", controller.GetServerAddress()),
-	)
-	e.Logger.Fatal(e.Start(controller.GetServerBindAddress()))
+	controller.NewController().Run(ctx)
 }

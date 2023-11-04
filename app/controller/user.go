@@ -26,10 +26,10 @@ type userRoute struct {
 // @Failure		404	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router		/v1/user [get]
-func handleListUsers(c echo.Context) error {
+func (con *Controller) handleListUsers(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	_, err := extractUser(c)
+	_, err := con.extractUser(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, dto.NewErrorResp(err.Error()))
 	}
@@ -54,7 +54,7 @@ func handleListUsers(c echo.Context) error {
 // @Failure		404	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router		/v1/user/{id} [get]
-func handleGetUser(c echo.Context) error {
+func (con *Controller) handleGetUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	qs := c.QueryParam("xxx")
@@ -93,7 +93,7 @@ func handleGetUser(c echo.Context) error {
 // @Failure		404	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router		/v1/user [post]
-func handleCreateUser(c echo.Context) error {
+func (con *Controller) handleCreateUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var u dto.CreateUser

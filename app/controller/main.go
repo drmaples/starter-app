@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -33,23 +34,35 @@ import (
 // @in header
 // @name x-jwt-token
 
-// GetServerAddress is address where server runs
-func GetServerAddress() string {
+// Controller contains all info about a controller
+type Controller struct {
+	e *echo.Echo
+}
+
+// Run the web server
+func (con *Controller) Run(ctx context.Context) {
+	slog.InfoContext(ctx, "starting server",
+		slog.String("address", getServerAddress()),
+	)
+	bindAddress := fmt.Sprintf(":%d", platform.Config().ServerPort)
+	con.e.Logger.Fatal(con.e.Start(bindAddress))
+}
+
+// getServerAddress is address where server runs
+func getServerAddress() string {
 	return fmt.Sprintf("%s:%d", platform.Config().ServerURL, platform.Config().ServerPort)
 }
 
-// GetServerBindAddress is bind address for echo server
-func GetServerBindAddress() string {
-	return fmt.Sprintf(":%d", platform.Config().ServerPort)
-}
-
-// Initialize sets up the controller layer
-func Initialize() *echo.Echo {
+// NewController sets up the controller layer
+func NewController() *Controller {
 	// programmatically set swagger info
-	docs.SwaggerInfo.Host = strings.SplitAfter(GetServerAddress(), "://")[1]
+	docs.SwaggerInfo.Host = strings.SplitAfter(getServerAddress(), "://")[1] // swagger does not want protocol, builds url dynamically with .Schemes
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
 	e := echo.New()
+	con := Controller{
+		e: e,
+	}
 	if platform.Config().Environment != "dev" {
 		e.HideBanner = true
 		e.HidePort = true
@@ -66,8 +79,8 @@ func Initialize() *echo.Echo {
 			return c.JSON(http.StatusOK, map[string]any{"howdy": "there"})
 		})
 		unrestricted.GET("/favicon.ico", func(c echo.Context) error { return nil }) // avoids 404 errors in the browser
-		unrestricted.GET("/login", handleLogin)
-		unrestricted.GET(oauthCallbackURL, handleOauthCallback)
+		unrestricted.GET("/login", con.handleLogin)
+		unrestricted.GET(oauthCallbackURL, con.handleOauthCallback)
 
 		unrestricted.GET("/swagger/*", echoSwagger.WrapHandler)
 		unrestricted.GET("/docs", func(c echo.Context) error {
@@ -86,9 +99,9 @@ func Initialize() *echo.Echo {
 				TokenLookup: "header:x-jwt-token",
 			}),
 		)
-		restricted.GET("/user", handleListUsers)
-		restricted.GET("/user/:id", handleGetUser)
-		restricted.POST("/user", handleCreateUser)
+		restricted.GET("/user", con.handleListUsers)
+		restricted.GET("/user/:id", con.handleGetUser)
+		restricted.POST("/user", con.handleCreateUser)
 	}
 
 	// list routes in use like gin. keep at bottom
@@ -101,7 +114,8 @@ func Initialize() *echo.Echo {
 			fmt.Printf("[%-5s] %-35s --> %s\n", strings.ToUpper(r.Method), r.Path, r.Name)
 		}
 	}
-	return e
+
+	return &con
 }
 
 type customValidator struct {

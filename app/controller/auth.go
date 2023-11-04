@@ -33,7 +33,7 @@ func getOauthConfig() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     platform.Config().GoogleClientID,
 		ClientSecret: platform.Config().GoogleClientSecret,
-		RedirectURL:  GetServerAddress() + oauthCallbackURL,
+		RedirectURL:  getServerAddress() + oauthCallbackURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.profile",
 			"https://www.googleapis.com/auth/userinfo.email",
@@ -48,7 +48,7 @@ type jwtCustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func extractUser(c echo.Context) (string, error) {
+func (con *Controller) extractUser(c echo.Context) (string, error) {
 	token, ok := c.Get("user").(*jwt.Token) // by default token is stored under `user` key
 	if !ok {
 		return "", errors.New("JWT token missing or invalid")
@@ -60,7 +60,7 @@ func extractUser(c echo.Context) (string, error) {
 	return claims.GetSubject()
 }
 
-func handleLogin(c echo.Context) error {
+func (con *Controller) handleLogin(c echo.Context) error {
 	// https://developers.google.com/identity/openid-connect/openid-connect#access-type-param
 	redirectURL := getOauthConfig().AuthCodeURL(
 		stateToken,
@@ -69,7 +69,7 @@ func handleLogin(c echo.Context) error {
 	return c.HTML(http.StatusOK, fmt.Sprintf(loginHTML, redirectURL))
 }
 
-func handleOauthCallback(c echo.Context) error {
+func (con *Controller) handleOauthCallback(c echo.Context) error {
 	ctx := c.Request().Context()
 	code := c.QueryParam("code")
 	if c.QueryParam("state") != stateToken { // FIXME: validate this with a nonce
