@@ -21,9 +21,8 @@ type userRoute struct {
 // @Accept		json
 // @Produce		json
 // @Security 	ApiKeyAuth
-// @Success		200	{object}	[]repo.User
-// @Failure		400	{object}	dto.ErrorResponse
-// @Failure		404	{object}	dto.ErrorResponse
+// @Success		200	{object}	[]dto.User
+// @Failure		401	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router		/v1/user [get]
 func (con *Controller) handleListUsers(c echo.Context) error {
@@ -39,7 +38,8 @@ func (con *Controller) handleListUsers(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
 
-	return c.JSON(http.StatusOK, users)
+	var res dto.User
+	return c.JSON(http.StatusOK, res.FromModels(users))
 }
 
 // @Summary		get user by id
@@ -49,8 +49,9 @@ func (con *Controller) handleListUsers(c echo.Context) error {
 // @Produce		json
 // @Security 	ApiKeyAuth
 // @Param 		id path int true "user id"
-// @Success		200	{object}	[]repo.User
+// @Success		200	{object}	dto.User
 // @Failure		400	{object}	dto.ErrorResponse
+// @Failure		401	{object}	dto.ErrorResponse
 // @Failure		404	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router		/v1/user/{id} [get]
@@ -78,7 +79,8 @@ func (con *Controller) handleGetUser(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, u)
+	var res dto.User
+	return c.JSON(http.StatusOK, res.FromModel(*u))
 }
 
 // @Summary		create user
@@ -88,8 +90,9 @@ func (con *Controller) handleGetUser(c echo.Context) error {
 // @Produce		json
 // @Security 	ApiKeyAuth
 // @Param 		data body dto.CreateUser true "data"
-// @Success		200	{object}	repo.User
+// @Success		200	{object}	dto.User
 // @Failure		400	{object}	dto.ErrorResponse
+// @Failure		401	{object}	dto.ErrorResponse
 // @Failure		404	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router		/v1/user [post]
@@ -128,5 +131,6 @@ func (con *Controller) handleCreateUser(c echo.Context) error {
 		),
 	)
 
-	return c.JSON(http.StatusOK, newUser)
+	var res dto.User
+	return c.JSON(http.StatusOK, res.FromModel(*newUser))
 }

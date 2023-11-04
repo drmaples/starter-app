@@ -22,6 +22,26 @@ func (u *User) Model() repo.User {
 	}
 }
 
+// FromModel converts from model object to DTO
+func (u *User) FromModel(m repo.User) User {
+	return User{
+		ID:        m.ID,
+		Email:     m.Email,
+		FirstName: m.FirstName,
+		LastName:  m.LastName,
+	}
+}
+
+// FromModels converts list of model object to list of DTOs
+func (u *User) FromModels(ms []repo.User) []User {
+	var res []User
+	for _, m := range ms {
+		u := User{}
+		res = append(res, u.FromModel(m))
+	}
+	return res
+}
+
 // CreateUser is for dto for creating new user
 type CreateUser struct {
 	Email     string `json:"email" validate:"required,email"`

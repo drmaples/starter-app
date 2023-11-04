@@ -18,15 +18,15 @@ definitions:
       message:
         type: string
     type: object
-  repo.User:
+  dto.User:
     properties:
       email:
         type: string
-      firstName:
+      first_name:
         type: string
       id:
         type: integer
-      lastName:
+      last_name:
         type: string
     type: object
 info:
@@ -50,14 +50,10 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/repo.User'
+              $ref: '#/definitions/dto.User'
             type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "404":
-          description: Not Found
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "500":
@@ -86,9 +82,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/repo.User'
+            $ref: '#/definitions/dto.User'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "404":
@@ -121,11 +121,13 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/repo.User'
-            type: array
+            $ref: '#/definitions/dto.User'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "404":
