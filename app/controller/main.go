@@ -113,7 +113,7 @@ func New(db *sql.DB, cfg platform.Config, userRepo repo.IUserRepo) *Controller {
 func (con *Controller) Run(ctx context.Context) {
 	slog.InfoContext(ctx, "starting server",
 		slog.String("env", con.cfg.Environment),
-		slog.String("address", con.getServerAddress()),
+		slog.String("address", con.cfg.ServerAddress),
 	)
 	bindAddress := fmt.Sprintf(":%d", con.cfg.ServerPort)
 	con.e.Logger.Fatal(con.e.Start(bindAddress))
@@ -121,12 +121,8 @@ func (con *Controller) Run(ctx context.Context) {
 
 // programmatically set swagger info that changes depending on environment
 func (con *Controller) adjustDynamicSwaggerInfo() {
-	docs.SwaggerInfo.Host = strings.SplitAfter(con.getServerAddress(), "://")[1] // swagger does not want protocol, builds url dynamically with .Schemes
+	docs.SwaggerInfo.Host = strings.SplitAfter(con.cfg.ServerAddress, "://")[1] // swagger does not want protocol, builds url dynamically with .Schemes
 	docs.SwaggerInfo.Schemes = []string{"http"}
-}
-
-func (con *Controller) getServerAddress() string {
-	return fmt.Sprintf("%s:%d", con.cfg.ServerURL, con.cfg.ServerPort)
 }
 
 type customValidator struct {

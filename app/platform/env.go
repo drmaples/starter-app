@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/caarlos0/env/v9"
+	"github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 )
@@ -36,9 +36,10 @@ type Config struct {
 
 	Environment string `env:"ENVIRONMENT,required"`
 
-	ServerURL  string `env:"SERVER_URL" envDefault:"http://localhost"`
-	ServerPort int    `env:"SERVER_PORT" envDefault:"8000"`
-	JWTSignKey string `env:"JWT_SIGN_KEY" envDefault:"my-secret"` // FIXME: do not want default, make required
+	ServerURL     string `env:"SERVER_URL" envDefault:"http://localhost"`
+	ServerPort    int    `env:"SERVER_PORT" envDefault:"8000"`
+	ServerAddress string `env:"SERVER_ADDRESS,expand" envDefault:"${SERVER_URL}:${SERVER_PORT}"`
+	JWTSignKey    string `env:"JWT_SIGN_KEY" envDefault:"my-secret"` // FIXME: do not want default, make required
 }
 
 // NewDBConfig creates new db config. used by CMDs that do not need every setting

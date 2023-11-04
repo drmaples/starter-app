@@ -32,7 +32,7 @@ func (con *Controller) getOauthConfig() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     con.cfg.GoogleClientID,
 		ClientSecret: con.cfg.GoogleClientSecret,
-		RedirectURL:  con.getServerAddress() + oauthCallbackURL,
+		RedirectURL:  con.cfg.ServerAddress + oauthCallbackURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.profile",
 			"https://www.googleapis.com/auth/userinfo.email",

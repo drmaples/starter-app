@@ -3,7 +3,7 @@ module github.com/drmaples/starter-app
 go 1.21
 
 require (
-	github.com/caarlos0/env/v9 v9.0.0
+	github.com/caarlos0/env/v10 v10.0.0
 	github.com/georgysavva/scany/v2 v2.0.0
 	github.com/go-playground/validator/v10 v10.15.4
 	github.com/golang-jwt/jwt/v5 v5.0.0
@@ -18,6 +18,7 @@ require (
 	github.com/magefile/mage v1.15.0
 	github.com/pkg/errors v0.9.1
 	github.com/samber/slog-echo v1.3.0
+	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.2
 	github.com/urfave/cli/v2 v2.25.7
@@ -31,6 +32,7 @@ require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gaukas/godicttls v0.0.4 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -59,6 +61,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/onsi/ginkgo/v2 v2.12.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-20 v0.3.3 // indirect
 	github.com/quic-go/quic-go v0.38.1 // indirect
