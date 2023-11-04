@@ -32,8 +32,13 @@ func rootCmd() *cli.App {
 	return root
 }
 
-func getMigrator() (*migrate.Migrate, error) {
-	dbConn, err := repo.Initialize(context.Background())
+func getMigrator(ctx context.Context) (*migrate.Migrate, error) {
+	cfg, err := platform.NewDBConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	dbConn, err := repo.Initialize(ctx, cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "problem getting db connection")
 	}
@@ -74,7 +79,7 @@ func currentCmd() *cli.Command {
 				return err
 			}
 
-			m, err := getMigrator()
+			m, err := getMigrator(cCtx.Context)
 			if err != nil {
 				return errors.Wrap(err, "problem creating migrator")
 			}
@@ -111,7 +116,7 @@ func runCmd() *cli.Command {
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
-			m, err := getMigrator()
+			m, err := getMigrator(cCtx.Context)
 			if err != nil {
 				return errors.Wrap(err, "problem creating migrator")
 			}
@@ -142,7 +147,6 @@ func runCmd() *cli.Command {
 
 func main() {
 	ctx := context.Background()
-	platform.DBConfig() // ensure env vars exist
 	if err := rootCmd().RunContext(ctx, os.Args); err != nil {
 		panic(err)
 	}

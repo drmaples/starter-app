@@ -31,22 +31,21 @@ type Querier interface {
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
-// dbConn is a singleton db connection. sql.Open should be called just once
-func dbConn() *sql.DB {
+// dbConn is a singleton db connection since sql.Open should be called once
+func dbConn(cfg platform.DBConfig) *sql.DB {
 	dbConnOnce.Do(func() {
-		cfg := platform.DBConfig()
 		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-			cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
+			cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name,
 		)
 		db, err := sql.Open("pgx", dsn)
 		if err != nil {
 			panic(err)
 		}
 
-		db.SetMaxOpenConns(cfg.DBMaxOpenConns)
-		db.SetMaxIdleConns(cfg.DBMaxIdleConns)
-		db.SetConnMaxIdleTime(cfg.DBConnMaxIdleTime)
-		db.SetConnMaxLifetime(cfg.DBConnMaxLifeTime)
+		db.SetMaxOpenConns(cfg.MaxOpenConns)
+		db.SetMaxIdleConns(cfg.MaxIdleConns)
+		db.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
+		db.SetConnMaxLifetime(cfg.ConnMaxLifeTime)
 
 		dbInst = db
 	})
@@ -54,8 +53,8 @@ func dbConn() *sql.DB {
 }
 
 // Initialize sets up the models layer - db connection
-func Initialize(ctx context.Context) (*sql.DB, error) {
-	db := dbConn()
+func Initialize(ctx context.Context, cfg platform.DBConfig) (*sql.DB, error) {
+	db := dbConn(cfg)
 	if err := db.PingContext(ctx); err != nil {
 		return nil, errors.Wrap(err, "cannot connect to db")
 	}

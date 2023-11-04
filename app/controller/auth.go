@@ -14,7 +14,6 @@ import (
 	"golang.org/x/oauth2/google"
 
 	"github.com/drmaples/starter-app/app/dto"
-	"github.com/drmaples/starter-app/app/platform"
 )
 
 const (
@@ -29,11 +28,11 @@ const loginHTML = `<!DOCTYPE html>
 </body>
 </html>`
 
-func getOauthConfig() *oauth2.Config {
+func (con *Controller) getOauthConfig() *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     platform.Config().GoogleClientID,
-		ClientSecret: platform.Config().GoogleClientSecret,
-		RedirectURL:  getServerAddress() + oauthCallbackURL,
+		ClientID:     con.cfg.GoogleClientID,
+		ClientSecret: con.cfg.GoogleClientSecret,
+		RedirectURL:  con.getServerAddress() + oauthCallbackURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.profile",
 			"https://www.googleapis.com/auth/userinfo.email",
@@ -62,7 +61,7 @@ func (con *Controller) extractUser(c echo.Context) (string, error) {
 
 func (con *Controller) handleLogin(c echo.Context) error {
 	// https://developers.google.com/identity/openid-connect/openid-connect#access-type-param
-	redirectURL := getOauthConfig().AuthCodeURL(
+	redirectURL := con.getOauthConfig().AuthCodeURL(
 		stateToken,
 		// oauth2.AccessTypeOffline, // add if a refresh token is needed
 	)
@@ -76,7 +75,7 @@ func (con *Controller) handleOauthCallback(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, dto.NewErrorResp("state token does not match"))
 	}
 
-	googleToken, err := getOauthConfig().Exchange(ctx, code)
+	googleToken, err := con.getOauthConfig().Exchange(ctx, code)
 	if err != nil {
 		err := errors.Wrap(err, "problem exchanging oauth code for token")
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
@@ -91,6 +90,7 @@ func (con *Controller) handleOauthCallback(c echo.Context) error {
 
 	email := googleClaims["email"].(string)
 	signedToken, err := NewSignedToken(
+		con.cfg.JWTSignKey,
 		email,
 		googleClaims["name"].(string),
 		googleClaims["hd"].(string), // hosted domain
@@ -106,7 +106,7 @@ func (con *Controller) handleOauthCallback(c echo.Context) error {
 }
 
 // NewSignedToken returns a signed JWT
-func NewSignedToken(email string, name string, domain string, expires time.Duration) (string, error) {
+func NewSignedToken(jwtSignKey string, email string, name string, domain string, expires time.Duration) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwtCustomClaims{
@@ -120,5 +120,5 @@ func NewSignedToken(email string, name string, domain string, expires time.Durat
 			},
 		},
 	)
-	return token.SignedString([]byte(platform.Config().JWTSignKey))
+	return token.SignedString([]byte(jwtSignKey))
 }

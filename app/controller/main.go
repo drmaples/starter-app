@@ -41,20 +41,20 @@ type Controller struct {
 	e        *echo.Echo
 	userRepo repo.IUserRepo
 	db       *sql.DB
+	cfg      platform.Config
 }
 
 // New sets up a new controller
-func New(db *sql.DB, userRepo repo.IUserRepo) *Controller {
-	// programmatically set swagger info
-	docs.SwaggerInfo.Host = strings.SplitAfter(getServerAddress(), "://")[1] // swagger does not want protocol, builds url dynamically with .Schemes
-	docs.SwaggerInfo.Schemes = []string{"http"}
-
+func New(db *sql.DB, cfg platform.Config, userRepo repo.IUserRepo) *Controller {
 	e := echo.New()
 	con := Controller{
 		e:        e,
 		userRepo: userRepo,
 		db:       db,
+		cfg:      cfg,
 	}
+
+	con.adjustDynamicSwaggerInfo()
 
 	e.HideBanner = true
 	e.HidePort = true
@@ -83,7 +83,7 @@ func New(db *sql.DB, userRepo repo.IUserRepo) *Controller {
 	{
 		restricted.Use(
 			echojwt.WithConfig(echojwt.Config{
-				SigningKey: []byte(platform.Config().JWTSignKey),
+				SigningKey: []byte(cfg.JWTSignKey),
 				NewClaimsFunc: func(c echo.Context) jwt.Claims {
 					return new(jwtCustomClaims)
 				},
@@ -96,7 +96,7 @@ func New(db *sql.DB, userRepo repo.IUserRepo) *Controller {
 	}
 
 	// list routes in use like gin. keep at bottom
-	if platform.Config().Environment == "dev" {
+	if cfg.Environment == "dev" {
 		allRoutes := e.Routes()
 		sort.SliceStable(allRoutes, func(i, j int) bool {
 			return allRoutes[i].Path < allRoutes[j].Path
@@ -112,15 +112,21 @@ func New(db *sql.DB, userRepo repo.IUserRepo) *Controller {
 // Run the web server
 func (con *Controller) Run(ctx context.Context) {
 	slog.InfoContext(ctx, "starting server",
-		slog.String("address", getServerAddress()),
+		slog.String("env", con.cfg.Environment),
+		slog.String("address", con.getServerAddress()),
 	)
-	bindAddress := fmt.Sprintf(":%d", platform.Config().ServerPort)
+	bindAddress := fmt.Sprintf(":%d", con.cfg.ServerPort)
 	con.e.Logger.Fatal(con.e.Start(bindAddress))
 }
 
-// getServerAddress is address where server runs
-func getServerAddress() string {
-	return fmt.Sprintf("%s:%d", platform.Config().ServerURL, platform.Config().ServerPort)
+// programmatically set swagger info that changes depending on environment
+func (con *Controller) adjustDynamicSwaggerInfo() {
+	docs.SwaggerInfo.Host = strings.SplitAfter(con.getServerAddress(), "://")[1] // swagger does not want protocol, builds url dynamically with .Schemes
+	docs.SwaggerInfo.Schemes = []string{"http"}
+}
+
+func (con *Controller) getServerAddress() string {
+	return fmt.Sprintf("%s:%d", con.cfg.ServerURL, con.cfg.ServerPort)
 }
 
 type customValidator struct {

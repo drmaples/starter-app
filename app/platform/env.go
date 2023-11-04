@@ -2,40 +2,34 @@ package platform
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/caarlos0/env/v9"
 	"github.com/joho/godotenv"
+	"github.com/pkg/errors"
 )
 
 const envFile = ".env"
 
-var (
-	cfgOnce   sync.Once
-	cfg       config
-	dbCfgOnce sync.Once
-	dbCfg     dbConfig
-)
+// DBConfig struct for holding db config
+type DBConfig struct {
+	Host     string `env:"PGHOST,required"`
+	Port     int    `env:"PGPORT,required"`
+	User     string `env:"PGUSER,required"`
+	Password string `env:"PGPASSWORD,required"`
+	Name     string `env:"PGDATABASE,required"`
 
-type dbConfig struct {
-	DBHost     string `env:"PGHOST,required"`
-	DBPort     int    `env:"PGPORT,required"`
-	DBUser     string `env:"PGUSER,required"`
-	DBPassword string `env:"PGPASSWORD,required"`
-	DBName     string `env:"PGDATABASE,required"`
-
-	DBConnMaxIdleTime time.Duration `env:"DB_CONN_MAX_IDLE_TIME" envDefault:"1m"`
-	DBConnMaxLifeTime time.Duration `env:"DB_CONN_MAX_LIFETIME" envDefault:"5m"`
-	DBMaxOpenConns    int           `env:"DB_MAX_OPEN_CONNS" envDefault:"-1"`
-	DBMaxIdleConns    int           `env:"DB_MAX_IDLE_CONNS" envDefault:"-1"`
+	ConnMaxIdleTime time.Duration `env:"DB_CONN_MAX_IDLE_TIME" envDefault:"1m"`
+	ConnMaxLifeTime time.Duration `env:"DB_CONN_MAX_LIFETIME" envDefault:"5m"`
+	MaxOpenConns    int           `env:"DB_MAX_OPEN_CONNS" envDefault:"-1"`
+	MaxIdleConns    int           `env:"DB_MAX_IDLE_CONNS" envDefault:"-1"`
 }
 
-type config struct {
-	dbConfig
+// Config struct for holding app config
+type Config struct {
+	DB DBConfig
 
 	GoogleClientID     string `env:"GOOGLE_CLIENT_ID,required"`
 	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET,required"`
@@ -47,46 +41,45 @@ type config struct {
 	JWTSignKey string `env:"JWT_SIGN_KEY" envDefault:"my-secret"` // FIXME: do not want default, make required
 }
 
-// DBConfig is a singleton representing the db config. used by CMDs that do not need every setting
-func DBConfig() dbConfig {
-	dbCfgOnce.Do(func() {
-		loadEnv(context.Background())
-		var c dbConfig
-		if err := env.Parse(&c); err != nil {
-			panic(err)
-		}
-		dbCfg = c
-	})
-	return dbCfg
+// NewDBConfig creates new db config. used by CMDs that do not need every setting
+func NewDBConfig() (DBConfig, error) {
+	if err := loadEnv(context.Background()); err != nil {
+		return DBConfig{}, err
+	}
+	var cfg DBConfig
+	if err := env.Parse(&cfg); err != nil {
+		return DBConfig{}, err
+	}
+	return cfg, nil
 }
 
-// Config is a singleton representing the app config
-func Config() config {
-	cfgOnce.Do(func() {
-		loadEnv(context.Background())
-		var c config
-		if err := env.Parse(&c); err != nil {
-			panic(err)
-		}
-		cfg = c
-	})
-	return cfg
+// NewConfig creates new app config
+func NewConfig() (Config, error) {
+	if err := loadEnv(context.Background()); err != nil {
+		return Config{}, err
+	}
+	var cfg Config
+	if err := env.Parse(&cfg); err != nil {
+		return Config{}, err
+	}
+	return cfg, nil
 }
 
 // loadEnv loads from .env file. non-local envs will have env vars injected via docker/k8s
-func loadEnv(ctx context.Context) {
+func loadEnv(ctx context.Context) error {
 	info, err := os.Stat(envFile)
 	if os.IsNotExist(err) {
 		slog.WarnContext(ctx, "env file not found", slog.String("file", envFile))
-		return
+		return nil
 	}
 	if info.IsDir() {
-		panic(fmt.Sprintf("%s is a dir, expected a file", envFile))
+		return errors.Wrap(err, "expected a file, got a directory")
 	}
 
 	if err := godotenv.Load(envFile); err != nil {
-		panic(err)
+		return errors.Wrap(err, "problem loading env from file")
 	}
 
 	slog.InfoContext(ctx, "successfully loaded env", slog.String("file", envFile))
+	return nil
 }
