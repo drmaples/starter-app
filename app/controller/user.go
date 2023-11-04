@@ -20,11 +20,12 @@ type userRoute struct {
 // @Tags		users
 // @Accept		json
 // @Produce		json
+// @Security 	ApiKeyAuth
 // @Success		200	{object}	[]repo.User
 // @Failure		400	{object}	dto.ErrorResponse
 // @Failure		404	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
-// @Router		/user [get]
+// @Router		/v1/user [get]
 func handleListUsers(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -41,6 +42,18 @@ func handleListUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
+// @Summary		get user by id
+// @Description	get user by id
+// @Tags		users
+// @Accept		json
+// @Produce		json
+// @Security 	ApiKeyAuth
+// @Param 		id path int true "user id"
+// @Success		200	{object}	[]repo.User
+// @Failure		400	{object}	dto.ErrorResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router		/v1/user/{id} [get]
 func handleGetUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -68,6 +81,18 @@ func handleGetUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, u)
 }
 
+// @Summary		create user
+// @Description	create user
+// @Tags		users
+// @Accept		json
+// @Produce		json
+// @Security 	ApiKeyAuth
+// @Param 		data body dto.CreateUser true "data"
+// @Success		200	{object}	repo.User
+// @Failure		400	{object}	dto.ErrorResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router		/v1/user [post]
 func handleCreateUser(c echo.Context) error {
 	ctx := c.Request().Context()
 

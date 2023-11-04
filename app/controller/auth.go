@@ -88,22 +88,14 @@ func handleOauthCallback(c echo.Context) error {
 	if _, _, err := jwt.NewParser().ParseUnverified(rawToken, googleClaims); err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
-	now := time.Now()
-	email := googleClaims["email"].(string)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwtCustomClaims{
-			Name:   googleClaims["name"].(string),
-			Domain: googleClaims["hd"].(string), // hosted domain
-			RegisteredClaims: jwt.RegisteredClaims{
-				ID:        uuid.New().String(),
-				Subject:   email,
-				ExpiresAt: jwt.NewNumericDate(now.Add(15 * time.Minute)),
-				IssuedAt:  jwt.NewNumericDate(now),
-			},
-		},
-	)
 
-	signedToken, err := token.SignedString([]byte(platform.Config().JWTSignKey))
+	email := googleClaims["email"].(string)
+	signedToken, err := NewSignedToken(
+		email,
+		googleClaims["name"].(string),
+		googleClaims["hd"].(string), // hosted domain
+		15*time.Minute,
+	)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
@@ -111,4 +103,22 @@ func handleOauthCallback(c echo.Context) error {
 	slog.InfoContext(ctx, "successful login", slog.String("email", email))
 
 	return c.JSON(http.StatusOK, echo.Map{"token:": signedToken})
+}
+
+// NewSignedToken returns a signed JWT
+func NewSignedToken(email string, name string, domain string, expires time.Duration) (string, error) {
+	now := time.Now()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwtCustomClaims{
+			Name:   name,
+			Domain: domain, // hosted domain
+			RegisteredClaims: jwt.RegisteredClaims{
+				ID:        uuid.New().String(),
+				Subject:   email,
+				ExpiresAt: jwt.NewNumericDate(now.Add(expires)),
+				IssuedAt:  jwt.NewNumericDate(now),
+			},
+		},
+	)
+	return token.SignedString([]byte(platform.Config().JWTSignKey))
 }
