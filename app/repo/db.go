@@ -43,11 +43,10 @@ func dbConn() *sql.DB {
 			panic(err)
 		}
 
-		// FIXME: do not forget to adjust these
-		// db.SetMaxOpenConns(...)
-		// db.SetMaxIdleConns(...)
-		// db.SetConnMaxIdleTime(...)
-		// db.SetConnMaxLifetime(...)
+		db.SetMaxOpenConns(cfg.DBMaxOpenConns)
+		db.SetMaxIdleConns(cfg.DBMaxIdleConns)
+		db.SetConnMaxIdleTime(cfg.DBConnMaxIdleTime)
+		db.SetConnMaxLifetime(cfg.DBConnMaxLifeTime)
 
 		dbInst = db
 	})

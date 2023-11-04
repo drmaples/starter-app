@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/caarlos0/env/v9"
 	"github.com/joho/godotenv"
@@ -26,6 +27,11 @@ type dbConfig struct {
 	DBUser     string `env:"PGUSER,required"`
 	DBPassword string `env:"PGPASSWORD,required"`
 	DBName     string `env:"PGDATABASE,required"`
+
+	DBConnMaxIdleTime time.Duration `env:"DB_CONN_MAX_IDLE_TIME" envDefault:"1m"`
+	DBConnMaxLifeTime time.Duration `env:"DB_CONN_MAX_LIFETIME" envDefault:"5m"`
+	DBMaxOpenConns    int           `env:"DB_MAX_OPEN_CONNS" envDefault:"-1"`
+	DBMaxIdleConns    int           `env:"DB_MAX_IDLE_CONNS" envDefault:"-1"`
 }
 
 type config struct {
@@ -38,7 +44,7 @@ type config struct {
 
 	ServerURL  string `env:"SERVER_URL" envDefault:"http://localhost"`
 	ServerPort int    `env:"SERVER_PORT" envDefault:"8000"`
-	JWTSignKey string `env:"JWT_SIGN_KEY" envDefault:"my-secret"` // FIXME: do not want default
+	JWTSignKey string `env:"JWT_SIGN_KEY" envDefault:"my-secret"` // FIXME: do not want default, make required
 }
 
 // DBConfig is a singleton representing the db config. used by CMDs that do not need every setting
