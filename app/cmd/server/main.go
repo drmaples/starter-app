@@ -17,9 +17,11 @@ func main() {
 
 	platform.Config() // ensure env vars exist
 
-	if err := repo.Initialize(ctx); err != nil {
+	dbConn, err := repo.Initialize(ctx)
+	if err != nil {
 		panic(err)
 	}
 
-	controller.NewController().Run(ctx)
+	con := controller.New(dbConn, repo.NewUserRepo())
+	con.Run(ctx)
 }

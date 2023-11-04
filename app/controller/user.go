@@ -34,7 +34,7 @@ func (con *Controller) handleListUsers(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, dto.NewErrorResp(err.Error()))
 	}
 
-	users, err := repo.NewUserRepo().ListUsers(ctx, repo.DBConn(), repo.DefaultSchema)
+	users, err := con.userRepo.ListUsers(ctx, con.db, repo.DefaultSchema)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
@@ -71,7 +71,7 @@ func (con *Controller) handleGetUser(c echo.Context) error {
 		),
 	)
 
-	u, err := repo.NewUserRepo().GetUserByID(ctx, repo.DBConn(), repo.DefaultSchema, ur.ID)
+	u, err := con.userRepo.GetUserByID(ctx, con.db, repo.DefaultSchema, ur.ID)
 	if err != nil {
 		if errors.Is(err, repo.ErrNoRowsFound) {
 			return c.JSON(http.StatusNotFound, dto.NewErrorResp("no user for given id"))
@@ -104,12 +104,12 @@ func (con *Controller) handleCreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.NewErrorResp(err.Error()))
 	}
 
-	tx, err := repo.DBConn().BeginTx(ctx, nil)
+	tx, err := con.db.BeginTx(ctx, nil)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.NewErrorResp(err.Error()))
 	}
 
-	newUser, err := repo.NewUserRepo().CreateUser(ctx, tx, repo.DefaultSchema, u.Model())
+	newUser, err := con.userRepo.CreateUser(ctx, tx, repo.DefaultSchema, u.Model())
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			err := errors.Wrap(err, "problem rolling back transaction")

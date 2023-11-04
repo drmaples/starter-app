@@ -31,8 +31,8 @@ type Querier interface {
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
-// DBConn is a singleton db connection
-func DBConn() *sql.DB {
+// dbConn is a singleton db connection. sql.Open should be called just once
+func dbConn() *sql.DB {
 	dbConnOnce.Do(func() {
 		cfg := platform.DBConfig()
 		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
@@ -55,9 +55,10 @@ func DBConn() *sql.DB {
 }
 
 // Initialize sets up the models layer - db connection
-func Initialize(ctx context.Context) error {
-	if err := DBConn().PingContext(ctx); err != nil {
-		return errors.Wrap(err, "cannot connect to db")
+func Initialize(ctx context.Context) (*sql.DB, error) {
+	db := dbConn()
+	if err := db.PingContext(ctx); err != nil {
+		return nil, errors.Wrap(err, "cannot connect to db")
 	}
-	return nil
+	return db, nil
 }

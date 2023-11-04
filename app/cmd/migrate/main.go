@@ -33,7 +33,12 @@ func rootCmd() *cli.App {
 }
 
 func getMigrator() (*migrate.Migrate, error) {
-	driver, err := postgres.WithInstance(repo.DBConn(), &postgres.Config{})
+	dbConn, err := repo.Initialize(context.Background())
+	if err != nil {
+		return nil, errors.Wrap(err, "problem getting db connection")
+	}
+
+	driver, err := postgres.WithInstance(dbConn, &postgres.Config{})
 	if err != nil {
 		return nil, errors.Wrap(err, "problem getting driver")
 	}
