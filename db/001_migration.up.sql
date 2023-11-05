@@ -6,8 +6,3 @@ CREATE TABLE users (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
-
-INSERT INTO users (email, first_name, last_name) VALUES
-    ('darrell@example.com', 'duh', 'rell'),
-    ('foo@bar.com', 'foo', 'bar'),
-    ('blip@blap.com', 'blip', 'blap');
