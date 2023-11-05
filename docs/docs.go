@@ -234,7 +234,7 @@ const docTemplate = `{
     "securityDefinitions": {
         "ApiKeyAuth": {
             "type": "apiKey",
-            "name": "x-jwt-token",
+            "name": "x-jwt",
             "in": "header"
         }
     }

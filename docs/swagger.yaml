@@ -146,6 +146,6 @@ paths:
 securityDefinitions:
   ApiKeyAuth:
     in: header
-    name: x-jwt-token
+    name: x-jwt
     type: apiKey
 swagger: "2.0"

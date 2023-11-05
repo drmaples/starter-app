@@ -34,7 +34,7 @@ import (
 // @BasePath /
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
-// @name x-jwt-token
+// @name x-jwt
 
 // Controller contains all info about a controller
 type Controller struct {
@@ -47,7 +47,7 @@ type Controller struct {
 // New sets up a new controller
 func New(db *sql.DB, cfg platform.Config, userRepo repo.IUserRepo) *Controller {
 	e := echo.New()
-	con := Controller{
+	con := &Controller{
 		e:        e,
 		userRepo: userRepo,
 		db:       db,
@@ -55,6 +55,7 @@ func New(db *sql.DB, cfg platform.Config, userRepo repo.IUserRepo) *Controller {
 	}
 
 	con.adjustDynamicSwaggerInfo()
+	con.setupRoutes()
 
 	e.HideBanner = true
 	e.HidePort = true
@@ -63,37 +64,6 @@ func New(db *sql.DB, cfg platform.Config, userRepo repo.IUserRepo) *Controller {
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Timeout: 30 * time.Second,
 	}))
-
-	unrestricted := e.Group("")
-	{
-		unrestricted.GET("/", func(c echo.Context) error {
-			return c.JSON(http.StatusOK, map[string]any{"howdy": "there"})
-		})
-		unrestricted.GET("/favicon.ico", func(c echo.Context) error { return nil }) // avoids 404 errors in the browser
-		unrestricted.GET("/login", con.handleLogin)
-		unrestricted.GET(oauthCallbackURL, con.handleOauthCallback)
-
-		unrestricted.GET("/swagger/*", echoSwagger.WrapHandler)
-		unrestricted.GET("/docs", func(c echo.Context) error {
-			return c.Redirect(http.StatusTemporaryRedirect, "/swagger/index.html")
-		})
-	}
-
-	restricted := e.Group("/v1")
-	{
-		restricted.Use(
-			echojwt.WithConfig(echojwt.Config{
-				SigningKey: []byte(cfg.JWTSignKey),
-				NewClaimsFunc: func(c echo.Context) jwt.Claims {
-					return new(jwtCustomClaims)
-				},
-				TokenLookup: "header:x-jwt-token",
-			}),
-		)
-		restricted.GET("/user", con.handleListUsers)
-		restricted.GET("/user/:id", con.handleGetUser)
-		restricted.POST("/user", con.handleCreateUser)
-	}
 
 	// list routes in use like gin. keep at bottom
 	if cfg.Environment == "dev" {
@@ -106,7 +76,7 @@ func New(db *sql.DB, cfg platform.Config, userRepo repo.IUserRepo) *Controller {
 		}
 	}
 
-	return &con
+	return con
 }
 
 // Run the web server
@@ -123,6 +93,39 @@ func (con *Controller) Run(ctx context.Context) {
 func (con *Controller) adjustDynamicSwaggerInfo() {
 	docs.SwaggerInfo.Host = strings.SplitAfter(con.cfg.ServerAddress, "://")[1] // swagger does not want protocol, builds url dynamically with .Schemes
 	docs.SwaggerInfo.Schemes = []string{"http"}
+}
+
+func (con *Controller) setupRoutes() {
+	unrestricted := con.e.Group("")
+	{
+		unrestricted.GET("/", func(c echo.Context) error {
+			return c.JSON(http.StatusOK, map[string]any{"howdy": "there"})
+		})
+		unrestricted.GET("/favicon.ico", func(c echo.Context) error { return nil }) // avoids 404 errors in the browser
+		unrestricted.GET("/login", con.handleLogin)
+		unrestricted.GET(oauthCallbackURL, con.handleOauthCallback)
+
+		unrestricted.GET("/swagger/*", echoSwagger.WrapHandler)
+		unrestricted.GET("/docs", func(c echo.Context) error {
+			return c.Redirect(http.StatusTemporaryRedirect, "/swagger/index.html")
+		})
+	}
+
+	restricted := con.e.Group("/v1")
+	{
+		restricted.Use(
+			echojwt.WithConfig(echojwt.Config{
+				SigningKey: []byte(con.cfg.JWTSignKey),
+				NewClaimsFunc: func(c echo.Context) jwt.Claims {
+					return new(jwtCustomClaims)
+				},
+				TokenLookup: "header:x-jwt",
+			}),
+		)
+		restricted.GET("/user", con.handleListUsers)
+		restricted.GET("/user/:id", con.handleGetUser)
+		restricted.POST("/user", con.handleCreateUser)
+	}
 }
 
 type customValidator struct {
