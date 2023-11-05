@@ -19,6 +19,7 @@ import (
 const (
 	stateToken       = "put-state-here"
 	oauthCallbackURL = "/backend/google/oauth2_callback"
+	authContextKey   = "user"
 )
 
 const loginHTML = `<!DOCTYPE html>
@@ -48,13 +49,17 @@ type jwtCustomClaims struct {
 }
 
 func (con *Controller) extractUser(c echo.Context) (string, error) {
-	token, ok := c.Get("user").(*jwt.Token) // by default token is stored under `user` key
+	rawToken := c.Get(authContextKey)
+	if rawToken == nil {
+		return "", errors.New("jwt missing")
+	}
+	token, ok := rawToken.(*jwt.Token)
 	if !ok {
-		return "", errors.New("JWT token missing or invalid")
+		return "", errors.New("jwt is incorrect type")
 	}
 	claims, ok := token.Claims.(*jwtCustomClaims)
 	if !ok {
-		return "", errors.New("failed to cast claims as jwt.MapClaims")
+		return "", errors.New("jwt claims are incorrect type")
 	}
 	return claims.GetSubject()
 }
@@ -105,20 +110,22 @@ func (con *Controller) handleOauthCallback(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{"token:": signedToken})
 }
 
+func newToken(email string, name string, domain string, expires time.Duration) *jwt.Token {
+	now := time.Now()
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, &jwtCustomClaims{
+		Name:   name,
+		Domain: domain, // hosted domain
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.New().String(),
+			Subject:   email,
+			ExpiresAt: jwt.NewNumericDate(now.Add(expires)),
+			IssuedAt:  jwt.NewNumericDate(now),
+		},
+	})
+}
+
 // NewSignedToken returns a signed JWT
 func NewSignedToken(jwtSignKey string, email string, name string, domain string, expires time.Duration) (string, error) {
-	now := time.Now()
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwtCustomClaims{
-			Name:   name,
-			Domain: domain, // hosted domain
-			RegisteredClaims: jwt.RegisteredClaims{
-				ID:        uuid.New().String(),
-				Subject:   email,
-				ExpiresAt: jwt.NewNumericDate(now.Add(expires)),
-				IssuedAt:  jwt.NewNumericDate(now),
-			},
-		},
-	)
+	token := newToken(email, name, domain, expires)
 	return token.SignedString([]byte(jwtSignKey))
 }

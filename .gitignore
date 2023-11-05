@@ -1,3 +1,4 @@
 .env*
 .pg*
 .local_fs
+vendor

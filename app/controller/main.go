@@ -115,6 +115,7 @@ func (con *Controller) setupRoutes() {
 	{
 		restricted.Use(
 			echojwt.WithConfig(echojwt.Config{
+				ContextKey: authContextKey,
 				SigningKey: []byte(con.cfg.JWTSignKey),
 				NewClaimsFunc: func(c echo.Context) jwt.Claims {
 					return new(jwtCustomClaims)

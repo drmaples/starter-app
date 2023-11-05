@@ -78,7 +78,10 @@ func (c *postgresContainer) Setup() error {
 	if err != nil {
 		return errors.Wrap(err, "error running container")
 	}
-	resource.Expire(hardKillSecs) // tell docker to hard kill the container in N seconds
+	// tell docker to hard kill the container in N seconds
+	if err := resource.Expire(hardKillSecs); err != nil {
+		return err
+	}
 	c.resource = resource
 	slog.Info("docker test container created", slog.String("name", resource.Container.Name), slog.String("image", resource.Container.Config.Image))
 
