@@ -11,6 +11,7 @@ a starter app with all the things you need for a new microservice:
 
 1. install [asdf](https://github.com/asdf-vm/asdf)
 2. install [asdf plugins](https://github.com/asdf-vm/asdf-plugins), see `.tool-versions` for plugins
+   - temp use this plugin for swag: https://github.com/behoof4mind/asdf-swag/issues/5#issuecomment-1594746413
 3. install tool versions listed in `.tool-versions`
 
 ## running

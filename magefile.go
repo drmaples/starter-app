@@ -3,7 +3,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/magefile/mage/mg"
@@ -29,17 +28,12 @@ func (Run) Db() error {
 }
 
 func (Gen) Swagger() error {
-	// swag is not in $PATH by default. https://github.com/swaggo/swag
-	path, err := sh.Output("go", "env", "GOPATH")
-	if err != nil {
-		return err
-	}
-	swag_bin := fmt.Sprintf("%s/bin/swag", path)
-	if err := sh.RunV(swag_bin, "--version"); err != nil {
+	// install swag via asdf
+	if err := sh.RunV("swag", "--version"); err != nil {
 		return err
 	}
 
-	return sh.RunV(swag_bin, "init", "--generalInfo", "app/controller/main.go")
+	return sh.RunV("swag", "init", "--generalInfo", "app/controller/main.go")
 }
 
 /*
