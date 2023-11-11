@@ -46,6 +46,7 @@ var (
 type githubRepoResponse struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
+	Archived      bool   `json:"archived"`
 }
 
 type githubRepoTeamResponse struct {
@@ -168,7 +169,7 @@ func doWork(ctx context.Context) error {
 
 	t := table.NewWriter()
 	t.SetStyle(table.StyleLight)
-	t.AppendHeader(table.Row{"repo", "default branch", "teams", "extra admins", "req checks", "num approvals", "dismiss stale", "code owner review", "restricted", "restricted pushers"})
+	t.AppendHeader(table.Row{"repo", "default branch", "teams", "extra admins", "archived", "req checks", "num approvals", "dismiss stale", "code owner review", "restricted", "restricted pushers"})
 
 	repos, err := getRepos(ctx)
 	if err != nil {
@@ -207,6 +208,7 @@ func doWork(ctx context.Context) error {
 			repo.DefaultBranch,
 			strings.Join(teams, "\n"),
 			strings.Join(extraAdmins, "\n"),
+			repo.Archived,
 			protectionData.RequiredStatusChecks.Checks,
 			protectionData.RequiredPullRequestReviews.RequiredApprovingReviewCount,
 			protectionData.RequiredPullRequestReviews.DismissStaleReviews,
