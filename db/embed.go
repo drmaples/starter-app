@@ -3,7 +3,9 @@ package db
 import (
 	"embed"
 	"io/fs"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 
@@ -41,4 +43,12 @@ func LatestMigrationVersion() (int, error) {
 	}
 
 	return latestVersion, nil
+}
+
+// GetDockerInitPath returns the path to the db init file for use with docker
+// CWD moves around depending on how tests are run and this provides stable path
+func GetDockerInitPath() string {
+	_, thisFilePath, _, _ := runtime.Caller(0)
+	thisDirPath := filepath.Dir(thisFilePath)
+	return filepath.Join(thisDirPath, "docker_init.sql")
 }

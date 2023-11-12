@@ -11,4 +11,5 @@ services:
       - POSTGRES_DB=darrell
       - PGDATA=/var/lib/postgresql/data
     volumes:
+      - ./db/docker_init.sql:/docker-entrypoint-initdb.d/init.sql
       - .pg/data:/var/lib/postgresql/data

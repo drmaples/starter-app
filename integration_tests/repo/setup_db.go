@@ -14,6 +14,7 @@ import (
 
 	"github.com/drmaples/starter-app/app/platform"
 	"github.com/drmaples/starter-app/app/repo"
+	"github.com/drmaples/starter-app/db"
 )
 
 const (
@@ -71,6 +72,9 @@ func (c *postgresContainer) Setup() error {
 				fmt.Sprintf("POSTGRES_USER=%s", pgUser),
 				fmt.Sprintf("POSTGRES_PASSWORD=%s", pgPass),
 				fmt.Sprintf("POSTGRES_DB=%s", pgDB),
+			},
+			Mounts: []string{
+				fmt.Sprintf("%s:/docker-entrypoint-initdb.d/init.sql", db.GetDockerInitPath()),
 			},
 		},
 		func(config *docker.HostConfig) {
