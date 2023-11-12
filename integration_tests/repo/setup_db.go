@@ -12,6 +12,7 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/pkg/errors"
 
+	"github.com/drmaples/starter-app/app/platform"
 	"github.com/drmaples/starter-app/app/repo"
 )
 
@@ -20,6 +21,7 @@ const (
 	pgUser  = "postgres"
 	pgPass  = "postgres"
 	pgDB    = "test"
+	pgSSL   = "disable"
 
 	dockerPortName = "5432/tcp"
 
@@ -89,7 +91,14 @@ func (c *postgresContainer) Setup() error {
 	if err != nil {
 		return err
 	}
-	dsn := fmt.Sprintf(repo.DSNTemplate, resource.GetBoundIP(dockerPortName), port, pgUser, pgPass, pgDB)
+	dsn := repo.GetConnectionURI(platform.DBConfig{
+		Host:     resource.GetBoundIP(dockerPortName),
+		Port:     port,
+		User:     pgUser,
+		Password: pgPass,
+		Name:     pgDB,
+		SSLMode:  pgSSL,
+	})
 	slog.Info("connecting to test database", slog.String("dsn", dsn))
 
 	var db *sql.DB
@@ -103,7 +112,7 @@ func (c *postgresContainer) Setup() error {
 		if err := db.Ping(); err != nil {
 			return errors.Wrap(err, "error pinging database")
 		}
-		m, err := repo.NewMigrator(db)
+		m, err := repo.NewMigrator(dsn)
 		if err != nil {
 			return errors.Wrap(err, "error creating db migrator")
 		}

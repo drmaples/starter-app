@@ -1,10 +1,8 @@
 package repo
 
 import (
-	"database/sql"
-
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres" // load postgres drivers
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/pkg/errors"
 
@@ -12,18 +10,13 @@ import (
 )
 
 // NewMigrator returns a new db migrator
-func NewMigrator(dbConn *sql.DB) (*migrate.Migrate, error) {
-	driver, err := postgres.WithInstance(dbConn, &postgres.Config{})
-	if err != nil {
-		return nil, errors.Wrap(err, "problem getting driver")
-	}
-
+func NewMigrator(dsn string) (*migrate.Migrate, error) {
 	fs, err := iofs.New(db.MigrationFS, db.FileLocation)
 	if err != nil {
 		return nil, errors.Wrap(err, "problem setting up migration file system")
 	}
 
-	m, err := migrate.NewWithInstance("iofs", fs, "postgres", driver)
+	m, err := migrate.NewWithSourceInstance("iofs", fs, dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "problem creating migrate object")
 	}

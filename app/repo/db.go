@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"sync"
 
 	_ "github.com/jackc/pgx/v5/stdlib" // postgres drivers
@@ -18,9 +19,6 @@ const (
 
 	// Driver is the database driver to use
 	Driver = "pgx"
-
-	// DSNTemplate is template used to construct db dsn
-	DSNTemplate = "host=%[1]s port=%[2]d user=%[3]s password=%[4]s dbname=%[5]s sslmode=disable"
 )
 
 var (
@@ -42,7 +40,7 @@ type Querier interface {
 // dbConn is a singleton db connection since sql.Open should be called once
 func dbConn(cfg platform.DBConfig) *sql.DB {
 	dbConnOnce.Do(func() {
-		dsn := fmt.Sprintf(DSNTemplate, cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name)
+		dsn := GetConnectionURI(cfg)
 		db, err := sql.Open(Driver, dsn)
 		if err != nil {
 			panic(err)
@@ -56,6 +54,23 @@ func dbConn(cfg platform.DBConfig) *sql.DB {
 		dbInst = db
 	})
 	return dbInst
+}
+
+// GetConnectionURI returns the connection URI for a given schema
+// https://www.postgresql.org/docs/14/libpq-connect.html#LIBPQ-CONNSTRING
+func GetConnectionURI(cfg platform.DBConfig) string {
+	p := url.Values{}
+	p.Add("sslmode", cfg.SSLMode)
+	p.Add("search_path", cfg.Schema)
+
+	u := url.URL{
+		Scheme:   "postgresql",
+		User:     url.UserPassword(cfg.User, cfg.Password),
+		Host:     fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		Path:     cfg.Name,
+		RawQuery: p.Encode(),
+	}
+	return u.String()
 }
 
 // Initialize sets up the models layer - db connection

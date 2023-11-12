@@ -20,6 +20,8 @@ type DBConfig struct {
 	User     string `env:"PGUSER,required"`
 	Password string `env:"PGPASSWORD,required"`
 	Name     string `env:"PGDATABASE,required"`
+	SSLMode  string `env:"PGSSLMODE" envDefault:"disable"`
+	Schema   string `env:"PGSCHEMA" envDefault:"public"`
 
 	ConnMaxIdleTime time.Duration `env:"DB_CONN_MAX_IDLE_TIME" envDefault:"1m"`
 	ConnMaxLifeTime time.Duration `env:"DB_CONN_MAX_LIFETIME" envDefault:"5m"`

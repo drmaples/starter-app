@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
-	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/pkg/errors"
@@ -30,18 +30,12 @@ func rootCmd() *cli.App {
 	return root
 }
 
-func getMigrator(ctx context.Context) (*migrate.Migrate, error) {
+func getMigrator() (*migrate.Migrate, error) {
 	cfg, err := platform.NewDBConfig()
 	if err != nil {
 		return nil, err
 	}
-
-	dbConn, err := repo.Initialize(ctx, cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "problem getting db connection")
-	}
-
-	return repo.NewMigrator(dbConn)
+	return repo.NewMigrator(repo.GetConnectionURI(cfg))
 }
 
 func currentCmd() *cli.Command {
@@ -49,21 +43,12 @@ func currentCmd() *cli.Command {
 		Name:  "current",
 		Usage: "list current and latest db migration version",
 		Action: func(cCtx *cli.Context) error {
-			paths, err := db.MigrationFS.ReadDir(db.FileLocation)
-			if err != nil {
-				return errors.Wrap(err, "problem listing paths")
-			}
-			latest := paths[len(paths)-1]
-			path := db.PathRE.FindSubmatch([]byte(latest.Name()))
-			if len(path) < 1 {
-				return errors.New("invalid migration path")
-			}
-			latestVersion, err := strconv.Atoi(string(path[1]))
+			latestVersion, err := db.LatestMigrationVersion()
 			if err != nil {
 				return err
 			}
 
-			m, err := getMigrator(cCtx.Context)
+			m, err := getMigrator()
 			if err != nil {
 				return errors.Wrap(err, "problem creating migrator")
 			}
@@ -100,7 +85,7 @@ func runCmd() *cli.Command {
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
-			m, err := getMigrator(cCtx.Context)
+			m, err := getMigrator()
 			if err != nil {
 				return errors.Wrap(err, "problem creating migrator")
 			}
@@ -132,6 +117,6 @@ func runCmd() *cli.Command {
 func main() {
 	ctx := context.Background()
 	if err := rootCmd().RunContext(ctx, os.Args); err != nil {
-		panic(err)
+		panic(fmt.Sprintf("%+v", err))
 	}
 }
