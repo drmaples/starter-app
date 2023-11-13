@@ -1,0 +1,15 @@
+services:
+  postgres:
+    container_name: darrell_db
+    image: postgres:15.2 # keep in sync integration_tests
+    ports:
+      - 15432:5432
+    environment:
+      # keep values (not keys) in sync with .env file
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=darrell
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - ./db/docker_init.sql:/docker-entrypoint-initdb.d/init.sql
+      - .pg/data:/var/lib/postgresql/data

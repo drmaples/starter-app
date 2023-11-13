@@ -1,0 +1,4 @@
+golang 1.21.4
+golangci-lint 1.55.2
+mage 1.14.0
+swag 1.16.2
