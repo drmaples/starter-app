@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/magefile/mage/mg"
@@ -34,6 +35,27 @@ func (Gen) Swagger() error {
 	}
 
 	return sh.RunV("swag", "init", "--generalInfo", "app/controller/main.go")
+}
+
+// see https://github.com/KarnerTh/mermerd
+func (Gen) Erd() error {
+	// what is an erd? https://www.databasestar.com/entity-relationship-diagram/
+
+	if err := sh.RunV("go", "install", "github.com/KarnerTh/mermerd@v0.11.0"); err != nil {
+		return err
+	}
+
+	basePath, err := sh.Output("go", "env", "GOPATH")
+	if err != nil {
+		return err
+	}
+
+	exe := fmt.Sprintf("%s/bin/mermerd", basePath)
+	if err := sh.RunV(exe, "version"); err != nil {
+		return err
+	}
+
+	return sh.RunV(exe, "--runConfig", "mermerd.yml")
 }
 
 /*

@@ -1,0 +1,21 @@
+## https://github.com/KarnerTh/mermerd
+
+connectionString: "postgresql://postgres:postgres@localhost:15432/darrell"
+
+schema:
+  - "public"
+
+useAllTables: true
+
+showAllConstraints: true
+encloseWithMermaidBackticks: true
+outputFileName: "database-erd.md"
+debug: true
+omitConstraintLabels: false
+omitAttributeKeys: false
+showDescriptions:
+  - enumValues
+  - columnComments
+  - notNull
+showSchemaPrefix: true
+schemaPrefixSeparator: "."
