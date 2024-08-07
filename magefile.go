@@ -11,8 +11,9 @@ import (
 )
 
 type (
-	Run mg.Namespace
-	Gen mg.Namespace
+	Run   mg.Namespace
+	Gen   mg.Namespace
+	Build mg.Namespace
 )
 
 func init() {
@@ -56,6 +57,29 @@ func (Gen) Erd() error {
 	}
 
 	return sh.RunV(exe, "--runConfig", "mermerd.yml")
+}
+
+func (Build) Containers() error {
+	buildImg := func(app string) error {
+		return sh.RunV("docker", "build", ".",
+			"--build-arg", fmt.Sprintf("BUILD_DATE=%s", os.Getenv("BUILD_DATE")),
+			"--build-arg", fmt.Sprintf("COMMIT_HASH=%s", os.Getenv("COMMIT_HASH")),
+			"--build-arg", fmt.Sprintf("APP_VERSION=%s", os.Getenv("APP_VERSION")),
+			"--file", fmt.Sprintf("app/cmd/%s/Dockerfile", app),
+			"--tag", fmt.Sprintf("drmaples/starter-app/%s", app),
+		)
+	}
+
+	mg.Deps(
+		func() error { return sh.RunV("docker", "build", ".", "--tag", "drmaples/starter-app/app-builder") },
+	)
+	mg.Deps(
+		// these depend on base. they are run in parallel
+		func() error { return buildImg("server") },
+		func() error { return buildImg("migrate") },
+	)
+
+	return nil
 }
 
 /*

@@ -34,7 +34,7 @@ var (
 			// ResponseHeader: false,
 			// Async:          false,
 		}).EnableDumpAll().
-		OnAfterResponse(func(client *req.Client, resp *req.Response) error {
+		OnAfterResponse(func(_ *req.Client, resp *req.Response) error {
 			if !resp.IsSuccessState() && resp.StatusCode != http.StatusNotFound {
 				slog.Error("request failed", slog.String("url", resp.Request.RawURL), slog.Int("status.code", resp.StatusCode))
 				return errors.New(resp.String())

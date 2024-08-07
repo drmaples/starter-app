@@ -1,0 +1,196 @@
+name: ci
+
+on: push
+
+jobs:
+  # gatekeeper job to know when CI is done. used by "Require status checks to pass before merging" setting
+  ci_done:
+    runs-on: ubuntu-latest
+    needs:
+      - lint_go
+      - swagger
+      - deps
+      - test_integration
+      - build_containers
+      - make_release
+    steps:
+      - run: echo "all done"
+
+  lint_go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.5
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.59.1 # keep in sync with .tool-versions
+          args: -v
+
+  deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.5
+      - run: go mod tidy && go mod vendor && go mod verify
+      - run: git status --porcelain
+      - run: exit $(git status --porcelain | wc -l)
+
+  swagger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.5
+      - name: install tools
+        run: |
+          go install github.com/magefile/mage@latest
+          # keep in sync with .tools-version
+          go install github.com/swaggo/swag/cmd/swag@v1.16.2
+      - name: ensure latest swagger is generated and checked in
+        run: |
+          mage gen:swagger
+          git status --porcelain
+          exit $(git status --porcelain | wc -l)
+
+  test_integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.5
+      - name: run tests
+        run: |
+          go clean -testcache
+          go test ./...
+        env:
+          ENVIRONMENT: test
+
+  calc_sha:
+    runs-on: ubuntu-latest
+    outputs:
+      sha_version_pr: ${{ steps.calc_sha_pr.outputs.sha_version }}
+      sha_version_push: ${{ steps.calc_sha_push.outputs.sha_version }}
+      sha_version: ${{ steps.choose_sha.outputs.sha_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # sha is different between `on: pull_request` and `on: push` :(
+      # https://frontside.com/blog/2020-05-26-github-actions-pull_request/#how-does-pull_request-affect-actionscheckout
+      - name: calc sha - pr
+        id: calc_sha_pr
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          SHA_DATE=$(TZ=UTC git log --no-walk HEAD --format=%ad --date=iso-local | cut -c1-10 | tr '-' '_')
+          SHORT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          SHA_VERSION="${SHA_DATE}_${SHORT_SHA}"
+          echo "SHA_VERSION: $SHA_VERSION"
+          echo "sha_version=$SHA_VERSION" >> $GITHUB_OUTPUT
+      - name: calc sha - push
+        id: calc_sha_push
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          SHA_DATE=$(TZ=UTC git log --no-walk HEAD --format=%ad --date=iso-local | cut -c1-10 | tr '-' '_')
+          SHORT_SHA=$(git log --no-walk HEAD --format=%h --abbrev=7)
+          SHA_VERSION="${SHA_DATE}_${SHORT_SHA}"
+          echo "SHA_VERSION: $SHA_VERSION"
+          echo "sha_version=$SHA_VERSION" >> $GITHUB_OUTPUT
+      - name: choose sha
+        id: choose_sha
+        run: |
+          # pick the right sha. PRs should take precedence
+          sha_pr="${{steps.calc_sha_pr.outputs.sha_version}}"
+          sha_push="${{steps.calc_sha_push.outputs.sha_version}}"
+          echo "sha_pr: $sha_pr"
+          echo "sha_push: $sha_push"
+          SHA_VERSION=$([ "$sha_pr" != "" ] && echo $sha_pr || echo $sha_push)
+          echo "SHA_VERSION: $SHA_VERSION"
+          echo "sha_version=$SHA_VERSION" >> $GITHUB_OUTPUT
+
+  build_containers:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    needs:
+      - calc_sha
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.22.5
+
+      - name: Set environment vars
+        run: |
+          echo COMMIT_HASH=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+          echo BUILD_DATE=$(TZ=UTC date +%Y-%m-%dT%T) >> $GITHUB_ENV
+          echo APP_VERSION="${{ needs.calc_sha.outputs.sha_version }}" >> $GITHUB_ENV
+          echo "COMMIT_HASH: ${COMMIT_HASH} BUILD_DATE: ${BUILD_DATE} APP_VERSION: ${APP_VERSION}"
+
+      - name: build containers
+        run: |
+          go install github.com/magefile/mage@latest
+          mage build:containers
+          docker images
+
+      - name: push images
+        run: |
+          LOCAL_BASE=${{ github.repository }}
+          GHCR_BASE=ghcr.io/${{ github.repository }}
+          SHA_VERSION="${{ needs.calc_sha.outputs.sha_version }}"
+          echo "GHCR_BASE: $GHCR_BASE"
+          echo "SHA_VERSION: $SHA_VERSION"
+
+          services=(
+            server
+            migrate
+          )
+          for service in "${services[@]}"; do
+            set -x
+            docker tag $LOCAL_BASE/$service $GHCR_BASE/$service:$SHA_VERSION
+            docker push $GHCR_BASE/$service:$SHA_VERSION
+          done
+
+  make_release:
+    runs-on: ubuntu-latest
+    needs:
+      - calc_sha
+      - build_containers
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: release_${{ needs.calc_sha.outputs.sha_version }}
+          release_name: ${{ needs.calc_sha.outputs.sha_version }}
+          body: |
+            🦑 🤖 image tag: ${{ needs.calc_sha.outputs.sha_version }}
+          draft: false
+          prerelease: false
