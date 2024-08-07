@@ -29,7 +29,7 @@ func LatestMigrationVersion() (int, error) {
 		return 0, errors.Wrap(err, "problem listing paths")
 	}
 
-	paths = lo.Filter(paths, func(item fs.DirEntry, index int) bool {
+	paths = lo.Filter(paths, func(item fs.DirEntry, _ int) bool {
 		return pathRE.Match([]byte(item.Name()))
 	})
 	sort.Slice(paths, func(i, j int) bool {

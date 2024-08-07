@@ -101,7 +101,7 @@ func (con *Controller) setupRoutes() {
 		unrestricted.GET("/", func(c echo.Context) error {
 			return c.JSON(http.StatusOK, map[string]any{"howdy": "there"})
 		})
-		unrestricted.GET("/favicon.ico", func(c echo.Context) error { return nil }) // avoids 404 errors in the browser
+		unrestricted.GET("/favicon.ico", func(_ echo.Context) error { return nil }) // avoids 404 errors in the browser
 		unrestricted.GET("/login", con.handleLogin)
 		unrestricted.GET(oauthCallbackURL, con.handleOauthCallback)
 
@@ -117,7 +117,7 @@ func (con *Controller) setupRoutes() {
 			echojwt.WithConfig(echojwt.Config{
 				ContextKey: authContextKey,
 				SigningKey: []byte(con.cfg.JWTSignKey),
-				NewClaimsFunc: func(c echo.Context) jwt.Claims {
+				NewClaimsFunc: func(_ echo.Context) jwt.Claims {
 					return new(jwtCustomClaims)
 				},
 				TokenLookup: "header:x-jwt",
