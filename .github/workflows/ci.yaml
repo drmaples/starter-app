@@ -12,7 +12,7 @@ jobs:
       - deps
       - test_integration
       - build_containers
-      - make_release
+      # - make_release
     steps:
       - run: echo "all done"
 
@@ -174,23 +174,23 @@ jobs:
             docker push $GHCR_BASE/$service:$SHA_VERSION
           done
 
-  make_release:
-    runs-on: ubuntu-latest
-    needs:
-      - calc_sha
-      - build_containers
-    if: ${{ github.ref == 'refs/heads/main' }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: release_${{ needs.calc_sha.outputs.sha_version }}
-          release_name: ${{ needs.calc_sha.outputs.sha_version }}
-          body: |
-            🦑 🤖 image tag: ${{ needs.calc_sha.outputs.sha_version }}
-          draft: false
-          prerelease: false
+  # make_release:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - calc_sha
+  #     - build_containers
+  #   if: ${{ github.ref == 'refs/heads/main' }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.event.pull_request.head.sha }}
+  #     - uses: actions/create-release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         tag_name: release_${{ needs.calc_sha.outputs.sha_version }}
+  #         release_name: ${{ needs.calc_sha.outputs.sha_version }}
+  #         body: |
+  #           🦑 🤖 image tag: ${{ needs.calc_sha.outputs.sha_version }}
+  #         draft: false
+  #         prerelease: false
